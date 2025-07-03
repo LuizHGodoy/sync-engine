@@ -19,7 +19,7 @@
     "sqlite",
     "typescript"
   ],
-  "author": "",
+  "author": "LuizHGodoy",
   "license": "MIT",
   "peerDependencies": {
     "expo-sqlite": "^14.0.0",
