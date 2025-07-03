@@ -1,8 +1,3 @@
-/**
- * Sync Engine Lib - Biblioteca de sincronização bidirecional offline-first
- * para React Native/Expo
- */
-
 export { SyncEngine } from "./syncEngine";
 
 export { QueueStorage } from "./queueStorage";
@@ -33,9 +28,6 @@ import { ConflictStrategies } from "./conflictResolver";
 import { SyncConfig, SyncEngineOptions } from "./types";
 
 export const SyncEngineUtils = {
-  /**
-   * Cria uma configuração padrão para o SyncEngine
-   */
   createDefaultConfig: (serverUrl: string): SyncConfig => ({
     serverUrl,
     batchSize: 10,
@@ -46,16 +38,10 @@ export const SyncEngineUtils = {
     requestTimeout: 10000,
   }),
 
-  /**
-   * Gera um ID único para items da queue
-   */
   generateId: (): string => {
     return `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   },
 
-  /**
-   * Valida se uma configuração está correta
-   */
   validateConfig: (
     config: SyncConfig
   ): { valid: boolean; errors: string[] } => {
@@ -97,9 +83,6 @@ export const SyncEngineUtils = {
     };
   },
 
-  /**
-   * Cria opções padrão para o SyncEngine
-   */
   createDefaultOptions: (config: SyncConfig): SyncEngineOptions => ({
     config,
     conflictStrategy: ConflictStrategies.timestampWins(),
@@ -108,9 +91,6 @@ export const SyncEngineUtils = {
 };
 
 export const SyncEngineConstants = {
-  /**
-   * Intervalos de sync comuns (em ms)
-   */
   SYNC_INTERVALS: {
     VERY_FAST: 5000,
     FAST: 15000,
@@ -119,9 +99,6 @@ export const SyncEngineConstants = {
     VERY_SLOW: 300000,
   },
 
-  /**
-   * Tamanhos de batch comuns
-   */
   BATCH_SIZES: {
     SMALL: 5,
     MEDIUM: 10,
@@ -129,18 +106,12 @@ export const SyncEngineConstants = {
     VERY_LARGE: 50,
   },
 
-  /**
-   * Timeouts comuns (em ms)
-   */
   TIMEOUTS: {
     FAST: 5000,
     NORMAL: 10000,
     SLOW: 30000,
   },
 
-  /**
-   * Delays de retry comuns (em ms)
-   */
   RETRY_DELAYS: {
     FAST: 500,
     NORMAL: 1000,
@@ -149,9 +120,6 @@ export const SyncEngineConstants = {
 };
 
 export const SyncEngineFactory = {
-  /**
-   * Cria um SyncEngine para desenvolvimento (com logs habilitados)
-   */
   createForDevelopment: (
     serverUrl: string,
     options?: Partial<SyncEngineOptions>
@@ -170,9 +138,6 @@ export const SyncEngineFactory = {
     });
   },
 
-  /**
-   * Cria um SyncEngine para produção (otimizado)
-   */
   createForProduction: (
     serverUrl: string,
     options?: Partial<SyncEngineOptions>
@@ -192,9 +157,6 @@ export const SyncEngineFactory = {
     });
   },
 
-  /**
-   * Cria um SyncEngine conservador (para dados críticos)
-   */
   createConservative: (
     serverUrl: string,
     options?: Partial<SyncEngineOptions>
@@ -217,9 +179,6 @@ export const SyncEngineFactory = {
     });
   },
 
-  /**
-   * Cria um SyncEngine agressivo (para sincronização rápida)
-   */
   createAggressive: (
     serverUrl: string,
     options?: Partial<SyncEngineOptions>

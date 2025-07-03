@@ -1,8 +1,5 @@
 import { QueueItem, ConflictResolutionStrategy } from "./types";
 
-/**
- * Resolvedor de conflitos com estratégias pluggáveis
- */
 export class ConflictResolver {
   private strategy: ConflictResolutionStrategy;
 
@@ -10,9 +7,6 @@ export class ConflictResolver {
     this.strategy = strategy;
   }
 
-  /**
-   * Resolve um conflito usando a estratégia configurada
-   */
   async resolve(localItem: QueueItem, serverItem: any): Promise<QueueItem> {
     try {
       return await this.strategy.resolve(localItem, serverItem);
@@ -21,28 +15,16 @@ export class ConflictResolver {
     }
   }
 
-  /**
-   * Muda a estratégia de resolução
-   */
   setStrategy(strategy: ConflictResolutionStrategy): void {
     this.strategy = strategy;
   }
 
-  /**
-   * Obtém a estratégia atual
-   */
   getStrategy(): ConflictResolutionStrategy {
     return this.strategy;
   }
 }
 
-/**
- * Estratégias predefinidas de resolução de conflitos
- */
 export const ConflictStrategies = {
-  /**
-   * Cliente sempre vence - mantém a versão local
-   */
   clientWins: (): ConflictResolutionStrategy => ({
     name: "client-wins",
     resolve: async (
@@ -56,9 +38,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Servidor sempre vence - usa a versão do servidor
-   */
   serverWins: (): ConflictResolutionStrategy => ({
     name: "server-wins",
     resolve: async (
@@ -73,9 +52,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Timestamp vence - usa a versão mais recente
-   */
   timestampWins: (): ConflictResolutionStrategy => ({
     name: "timestamp-wins",
     resolve: async (
@@ -100,9 +76,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Merge simples - combina propriedades (shallow merge)
-   */
   merge: (): ConflictResolutionStrategy => ({
     name: "merge",
     resolve: async (
@@ -131,9 +104,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Merge inteligente - preserva campos específicos do cliente
-   */
   smartMerge: (
     clientFields: string[] = ["id", "createdAt"]
   ): ConflictResolutionStrategy => ({
@@ -167,9 +137,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Estratégia baseada em versão
-   */
   versionBased: (): ConflictResolutionStrategy => ({
     name: "version-based",
     resolve: async (
@@ -201,9 +168,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Estratégia personalizada que permite definir lógica customizada
-   */
   custom: (
     resolveFn: (localItem: QueueItem, serverItem: any) => Promise<QueueItem>
   ): ConflictResolutionStrategy => ({
@@ -211,9 +175,6 @@ export const ConflictStrategies = {
     resolve: resolveFn,
   }),
 
-  /**
-   * Estratégia que falha - força tratamento manual do conflito
-   */
   manual: (): ConflictResolutionStrategy => ({
     name: "manual",
     resolve: async (
@@ -226,9 +187,6 @@ export const ConflictStrategies = {
     },
   }),
 
-  /**
-   * Estratégia que mantém ambas as versões (cria duplicata)
-   */
   keepBoth: (): ConflictResolutionStrategy => ({
     name: "keep-both",
     resolve: async (
@@ -251,13 +209,7 @@ export const ConflictStrategies = {
   }),
 };
 
-/**
- * Utilitários para análise de conflitos
- */
 export const ConflictUtils = {
-  /**
-   * Verifica se houve mudanças significativas entre as versões
-   */
   hasSignificantChanges: (
     localItem: QueueItem,
     serverItem: any,
@@ -281,9 +233,6 @@ export const ConflictUtils = {
     return JSON.stringify(localCopy) !== JSON.stringify(serverCopy);
   },
 
-  /**
-   * Identifica o tipo de conflito
-   */
   identifyConflictType: (
     localItem: QueueItem,
     serverItem: any
@@ -309,9 +258,6 @@ export const ConflictUtils = {
     return "field";
   },
 
-  /**
-   * Cria um relatório de diferenças entre as versões
-   */
   createDiffReport: (
     localItem: QueueItem,
     serverItem: any

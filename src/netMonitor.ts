@@ -1,17 +1,11 @@
 import NetInfo from "@react-native-community/netinfo";
 import { SyncEventListener } from "./types";
 
-/**
- * Monitor de conectividade de rede
- */
 export class NetMonitor {
   private isOnline: boolean = false;
   private listeners: SyncEventListener[] = [];
   private unsubscribe: (() => void) | null = null;
 
-  /**
-   * Inicializa o monitor de rede
-   */
   async initialize(): Promise<void> {
     const state = await NetInfo.fetch();
     this.isOnline = state.isConnected ?? false;
@@ -26,23 +20,14 @@ export class NetMonitor {
     });
   }
 
-  /**
-   * Retorna o status atual da conexão
-   */
   getConnectionStatus(): boolean {
     return this.isOnline;
   }
 
-  /**
-   * Adiciona um listener para mudanças de conectividade
-   */
   addEventListener(listener: SyncEventListener): void {
     this.listeners.push(listener);
   }
 
-  /**
-   * Remove um listener
-   */
   removeEventListener(listener: SyncEventListener): void {
     const index = this.listeners.indexOf(listener);
     if (index > -1) {
@@ -50,9 +35,6 @@ export class NetMonitor {
     }
   }
 
-  /**
-   * Notifica todos os listeners sobre mudança de conectividade
-   */
   private notifyListeners(): void {
     const event = {
       type: "connection_changed" as const,
@@ -69,9 +51,6 @@ export class NetMonitor {
     });
   }
 
-  /**
-   * Verifica se está conectado à internet
-   */
   async checkConnection(): Promise<boolean> {
     try {
       const state = await NetInfo.fetch();
@@ -89,9 +68,6 @@ export class NetMonitor {
     }
   }
 
-  /**
-   * Aguarda até que a conexão seja estabelecida
-   */
   async waitForConnection(timeout: number = 30000): Promise<boolean> {
     if (this.isOnline) {
       return true;
@@ -119,9 +95,6 @@ export class NetMonitor {
     });
   }
 
-  /**
-   * Obtém informações detalhadas da conexão
-   */
   async getConnectionDetails(): Promise<{
     isConnected: boolean;
     type: string;
@@ -144,9 +117,6 @@ export class NetMonitor {
     }
   }
 
-  /**
-   * Finaliza o monitor de rede
-   */
   destroy(): void {
     if (this.unsubscribe) {
       this.unsubscribe();

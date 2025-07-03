@@ -1,7 +1,3 @@
-/**
- * Exemplo de uso da Sync Engine Lib
- */
-
 import {
   SyncEngineFactory,
   SyncEngineUtils,

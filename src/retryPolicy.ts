@@ -1,8 +1,5 @@
 import { BackoffConfig } from "./types";
 
-/**
- * Gerenciador de política de retry com backoff exponencial
- */
 export class RetryPolicy {
   private config: BackoffConfig;
 
@@ -10,9 +7,6 @@ export class RetryPolicy {
     this.config = config;
   }
 
-  /**
-   * Calcula o delay para a próxima tentativa
-   */
   calculateDelay(attempt: number): number {
     if (attempt <= 0) {
       return 0;
@@ -24,16 +18,10 @@ export class RetryPolicy {
     return Math.min(delay, this.config.maxDelay);
   }
 
-  /**
-   * Verifica se deve tentar novamente
-   */
   shouldRetry(currentAttempt: number): boolean {
     return currentAttempt < this.config.maxRetries;
   }
 
-  /**
-   * Aguarda o tempo de delay calculado
-   */
   async wait(attempt: number): Promise<void> {
     const delay = this.calculateDelay(attempt);
 
@@ -46,9 +34,6 @@ export class RetryPolicy {
     });
   }
 
-  /**
-   * Executa uma operação com retry automático
-   */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
     onRetry?: (attempt: number, error: Error) => void
@@ -78,9 +63,6 @@ export class RetryPolicy {
     throw lastError!;
   }
 
-  /**
-   * Cria uma nova instância com configuração atualizada
-   */
   withConfig(newConfig: Partial<BackoffConfig>): RetryPolicy {
     return new RetryPolicy({
       ...this.config,
@@ -88,16 +70,10 @@ export class RetryPolicy {
     });
   }
 
-  /**
-   * Obtém a configuração atual
-   */
   getConfig(): BackoffConfig {
     return { ...this.config };
   }
 
-  /**
-   * Calcula o tempo total máximo que pode levar para esgotar todas as tentativas
-   */
   calculateMaxTotalTime(): number {
     let totalTime = 0;
 
@@ -108,9 +84,6 @@ export class RetryPolicy {
     return totalTime;
   }
 
-  /**
-   * Gera um jitter (variação aleatória) para evitar thundering herd
-   */
   calculateDelayWithJitter(
     attempt: number,
     jitterFactor: number = 0.1
@@ -122,9 +95,6 @@ export class RetryPolicy {
     return Math.max(0, baseDelay + jitter);
   }
 
-  /**
-   * Aguarda com jitter aplicado
-   */
   async waitWithJitter(
     attempt: number,
     jitterFactor: number = 0.1
@@ -141,13 +111,7 @@ export class RetryPolicy {
   }
 }
 
-/**
- * Configurações predefinidas de retry
- */
 export const RetryPolicies = {
-  /**
-   * Política conservadora - para operações críticas
-   */
   conservative: (): RetryPolicy =>
     new RetryPolicy({
       initialDelay: 1000,
@@ -156,9 +120,6 @@ export const RetryPolicies = {
       maxRetries: 5,
     }),
 
-  /**
-   * Política agressiva - para operações menos críticas
-   */
   aggressive: (): RetryPolicy =>
     new RetryPolicy({
       initialDelay: 500,
@@ -167,9 +128,6 @@ export const RetryPolicies = {
       maxRetries: 3,
     }),
 
-  /**
-   * Política rápida - para operações que precisam falhar rápido
-   */
   fast: (): RetryPolicy =>
     new RetryPolicy({
       initialDelay: 100,
@@ -178,9 +136,6 @@ export const RetryPolicies = {
       maxRetries: 2,
     }),
 
-  /**
-   * Política personalizada com valores padrão sensatos
-   */
   default: (): RetryPolicy =>
     new RetryPolicy({
       initialDelay: 1000,

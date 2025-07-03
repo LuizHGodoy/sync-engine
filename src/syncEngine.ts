@@ -13,9 +13,6 @@ import {
   ServerResponse,
 } from "./types";
 
-/**
- * Engine principal de sincronização bidirecional
- */
 export class SyncEngine {
   private storage: QueueStorage;
   private netMonitor: NetMonitor;
@@ -35,7 +32,7 @@ export class SyncEngine {
 
   constructor(options: SyncEngineOptions) {
     this.config = options.config;
-    this.hooks = options.hooks || {};
+    this.hooks = options.hooks;
     this.debug = options.debug || false;
 
     this.storage = new QueueStorage();
@@ -49,9 +46,6 @@ export class SyncEngine {
     this.bindMethods();
   }
 
-  /**
-   * Inicializa a engine de sincronização
-   */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
       return;
@@ -74,9 +68,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Inicia a sincronização automática
-   */
   async start(): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -97,9 +88,6 @@ export class SyncEngine {
     this.emitEvent("sync_started", { autoSync: true });
   }
 
-  /**
-   * Para a sincronização automática
-   */
   stop(): void {
     if (!this.isActive) {
       return;
@@ -116,9 +104,6 @@ export class SyncEngine {
     this.emitEvent("sync_started", { autoSync: false });
   }
 
-  /**
-   * Adiciona um item à queue de sincronização
-   */
   async addToQueue(
     id: string,
     type: string,
@@ -155,9 +140,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Força uma sincronização imediata
-   */
   async forceSync(): Promise<{
     success: boolean;
     syncedItems: number;
@@ -229,9 +211,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Obtém o status atual da sincronização
-   */
   async getStatus(): Promise<SyncStatus> {
     if (!this.isInitialized) {
       return {
@@ -255,16 +234,10 @@ export class SyncEngine {
     };
   }
 
-  /**
-   * Adiciona um listener de eventos
-   */
   addEventListener(listener: SyncEventListener): void {
     this.listeners.push(listener);
   }
 
-  /**
-   * Remove um listener de eventos
-   */
   removeEventListener(listener: SyncEventListener): void {
     const index = this.listeners.indexOf(listener);
     if (index > -1) {
@@ -272,17 +245,11 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Limpa items sincronizados antigos
-   */
   async clearSyncedItems(): Promise<void> {
     await this.storage.removeSyncedItems();
     this.log("Items sincronizados removidos");
   }
 
-  /**
-   * Reinicia items com erro
-   */
   async retryFailedItems(): Promise<void> {
     const errorItems = await this.storage.getErrorItems();
 
@@ -297,9 +264,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Finaliza a engine
-   */
   async destroy(): Promise<void> {
     this.log("Finalizando Sync Engine");
 

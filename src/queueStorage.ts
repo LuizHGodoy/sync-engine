@@ -1,20 +1,14 @@
-import * as SQLite from 'expo-sqlite';
-import { QueueItem } from './types';
+import * as SQLite from "expo-sqlite";
+import { QueueItem } from "./types";
 
-/**
- * Gerenciador de armazenamento da queue usando SQLite
- */
 export class QueueStorage {
   private db: SQLite.SQLiteDatabase | null = null;
   private readonly dbName: string;
 
-  constructor(dbName: string = 'sync_engine.db') {
+  constructor(dbName: string = "sync_engine.db") {
     this.dbName = dbName;
   }
 
-  /**
-   * Inicializa o banco de dados e cria as tabelas necessárias
-   */
   async initialize(): Promise<void> {
     try {
       this.db = await SQLite.openDatabaseAsync(this.dbName);
@@ -24,11 +18,8 @@ export class QueueStorage {
     }
   }
 
-  /**
-   * Cria as tabelas necessárias
-   */
   private async createTables(): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     const createTableSQL = `
       CREATE TABLE IF NOT EXISTS sync_queue (
@@ -53,11 +44,10 @@ export class QueueStorage {
     await this.db.execAsync(createIndexSQL);
   }
 
-  /**
-   * Adiciona um item à queue
-   */
-  async addItem(item: Omit<QueueItem, 'retries' | 'createdAt' | 'updatedAt'>): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+  async addItem(
+    item: Omit<QueueItem, "retries" | "createdAt" | "updatedAt">
+  ): Promise<void> {
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     const now = Date.now();
     const queueItem: QueueItem = {
@@ -84,11 +74,11 @@ export class QueueStorage {
     ]);
   }
 
-  /**
-   * Obtém items da queue por status
-   */
-  async getItemsByStatus(status: QueueItem['status'], limit?: number): Promise<QueueItem[]> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+  async getItemsByStatus(
+    status: QueueItem["status"],
+    limit?: number
+  ): Promise<QueueItem[]> {
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     let query = `
       SELECT * FROM sync_queue 
@@ -99,7 +89,7 @@ export class QueueStorage {
     const params: any[] = [status];
 
     if (limit && limit > 0) {
-      query += ' LIMIT ?';
+      query += " LIMIT ?";
       params.push(limit);
     }
 
@@ -107,29 +97,20 @@ export class QueueStorage {
     return result.map(this.mapRowToQueueItem);
   }
 
-  /**
-   * Obtém items pendentes para sincronização
-   */
   async getPendingItems(limit?: number): Promise<QueueItem[]> {
-    return this.getItemsByStatus('pending', limit);
+    return this.getItemsByStatus("pending", limit);
   }
 
-  /**
-   * Obtém items com erro
-   */
   async getErrorItems(limit?: number): Promise<QueueItem[]> {
-    return this.getItemsByStatus('error', limit);
+    return this.getItemsByStatus("error", limit);
   }
 
-  /**
-   * Atualiza o status de um item
-   */
   async updateItemStatus(
-    id: string, 
-    status: QueueItem['status'], 
+    id: string,
+    status: QueueItem["status"],
     incrementRetries: boolean = false
   ): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     const now = Date.now();
     let updateSQL = `
@@ -139,45 +120,36 @@ export class QueueStorage {
     const params: any[] = [status, now, now];
 
     if (incrementRetries) {
-      updateSQL += ', retries = retries + 1';
+      updateSQL += ", retries = retries + 1";
     }
 
-    updateSQL += ' WHERE id = ?';
+    updateSQL += " WHERE id = ?";
     params.push(id);
 
     await this.db.runAsync(updateSQL, params);
   }
 
-  /**
-   * Remove um item da queue
-   */
   async removeItem(id: string): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
-    const deleteSQL = 'DELETE FROM sync_queue WHERE id = ?';
+    const deleteSQL = "DELETE FROM sync_queue WHERE id = ?";
     await this.db.runAsync(deleteSQL, [id]);
   }
 
-  /**
-   * Remove todos os items sincronizados
-   */
   async removeSyncedItems(): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
-    const deleteSQL = 'DELETE FROM sync_queue WHERE status = ?';
-    await this.db.runAsync(deleteSQL, ['synced']);
+    const deleteSQL = "DELETE FROM sync_queue WHERE status = ?";
+    await this.db.runAsync(deleteSQL, ["synced"]);
   }
 
-  /**
-   * Obtém estatísticas da queue
-   */
   async getQueueStats(): Promise<{
     pending: number;
     synced: number;
     error: number;
     total: number;
   }> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     const statsSQL = `
       SELECT 
@@ -188,7 +160,7 @@ export class QueueStorage {
     `;
 
     const result = await this.db.getAllAsync(statsSQL);
-    
+
     const stats = {
       pending: 0,
       synced: 0,
@@ -206,13 +178,10 @@ export class QueueStorage {
     return stats;
   }
 
-  /**
-   * Obtém um item específico por ID
-   */
   async getItem(id: string): Promise<QueueItem | null> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
-    const selectSQL = 'SELECT * FROM sync_queue WHERE id = ?';
+    const selectSQL = "SELECT * FROM sync_queue WHERE id = ?";
     const result = await this.db.getFirstAsync(selectSQL, [id]);
 
     if (!result) return null;
@@ -220,28 +189,19 @@ export class QueueStorage {
     return this.mapRowToQueueItem(result);
   }
 
-  /**
-   * Limpa toda a queue (uso cuidadoso)
-   */
   async clearQueue(): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
-    const deleteSQL = 'DELETE FROM sync_queue';
+    const deleteSQL = "DELETE FROM sync_queue";
     await this.db.runAsync(deleteSQL);
   }
 
-  /**
-   * Executa uma transação
-   */
   async transaction(callback: () => Promise<void>): Promise<void> {
-    if (!this.db) throw new Error('Banco de dados não inicializado');
+    if (!this.db) throw new Error("Banco de dados não inicializado");
 
     await this.db.withTransactionAsync(callback);
   }
 
-  /**
-   * Mapeia uma linha do banco para QueueItem
-   */
   private mapRowToQueueItem(row: any): QueueItem {
     return {
       id: row.id,
@@ -255,9 +215,6 @@ export class QueueStorage {
     };
   }
 
-  /**
-   * Fecha a conexão com o banco
-   */
   async close(): Promise<void> {
     if (this.db) {
       await this.db.closeAsync();
