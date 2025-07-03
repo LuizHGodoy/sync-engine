@@ -1,5 +1,5 @@
-import NetInfo from '@react-native-community/netinfo';
-import { SyncEventListener } from './types';
+import NetInfo from "@react-native-community/netinfo";
+import { SyncEventListener } from "./types";
 
 /**
  * Monitor de conectividade de rede
@@ -13,16 +13,13 @@ export class NetMonitor {
    * Inicializa o monitor de rede
    */
   async initialize(): Promise<void> {
-    // Verifica status inicial
     const state = await NetInfo.fetch();
     this.isOnline = state.isConnected ?? false;
 
-    // Monitora mudanças de conectividade
     this.unsubscribe = NetInfo.addEventListener((state) => {
       const wasOnline = this.isOnline;
       this.isOnline = state.isConnected ?? false;
 
-      // Notifica listeners apenas se o status mudou
       if (wasOnline !== this.isOnline) {
         this.notifyListeners();
       }
@@ -58,16 +55,16 @@ export class NetMonitor {
    */
   private notifyListeners(): void {
     const event = {
-      type: 'connection_changed' as const,
+      type: "connection_changed" as const,
       timestamp: Date.now(),
       data: { isOnline: this.isOnline },
     };
 
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
-        console.error('Erro ao notificar listener de conectividade:', error);
+        console.error("Erro ao notificar listener de conectividade:", error);
       }
     });
   }
@@ -79,16 +76,15 @@ export class NetMonitor {
     try {
       const state = await NetInfo.fetch();
       const isConnected = state.isConnected ?? false;
-      
-      // Atualiza o status se mudou
+
       if (this.isOnline !== isConnected) {
         this.isOnline = isConnected;
         this.notifyListeners();
       }
-      
+
       return isConnected;
     } catch (error) {
-      console.error('Erro ao verificar conectividade:', error);
+      console.error("Erro ao verificar conectividade:", error);
       return false;
     }
   }
@@ -108,7 +104,7 @@ export class NetMonitor {
       }, timeout);
 
       const connectionListener: SyncEventListener = (event) => {
-        if (event.type === 'connection_changed' && event.data?.isOnline) {
+        if (event.type === "connection_changed" && event.data?.isOnline) {
           cleanup();
           resolve(true);
         }
@@ -139,10 +135,10 @@ export class NetMonitor {
         isInternetReachable: state.isInternetReachable,
       };
     } catch (error) {
-      console.error('Erro ao obter detalhes da conexão:', error);
+      console.error("Erro ao obter detalhes da conexão:", error);
       return {
         isConnected: false,
-        type: 'unknown',
+        type: "unknown",
         isInternetReachable: null,
       };
     }

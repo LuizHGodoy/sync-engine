@@ -3,16 +3,17 @@
  * para React Native/Expo
  */
 
-// Exporta a classe principal
-export { SyncEngine } from './syncEngine';
+export { SyncEngine } from "./syncEngine";
 
-// Exporta componentes individuais
-export { QueueStorage } from './queueStorage';
-export { NetMonitor } from './netMonitor';
-export { RetryPolicy, RetryPolicies } from './retryPolicy';
-export { ConflictResolver, ConflictStrategies, ConflictUtils } from './conflictResolver';
+export { QueueStorage } from "./queueStorage";
+export { NetMonitor } from "./netMonitor";
+export { RetryPolicy, RetryPolicies } from "./retryPolicy";
+export {
+  ConflictResolver,
+  ConflictStrategies,
+  ConflictUtils,
+} from "./conflictResolver";
 
-// Exporta todos os tipos
 export type {
   QueueItem,
   SyncConfig,
@@ -25,17 +26,12 @@ export type {
   SyncEventType,
   SyncEvent,
   SyncEventListener,
-} from './types';
+} from "./types";
 
-// Importa tipos e classes necessárias
-import { SyncEngine } from './syncEngine';
-import { ConflictStrategies } from './conflictResolver';
-import {
-  SyncConfig,
-  SyncEngineOptions,
-} from './types';
+import { SyncEngine } from "./syncEngine";
+import { ConflictStrategies } from "./conflictResolver";
+import { SyncConfig, SyncEngineOptions } from "./types";
 
-// Utilitários e helpers
 export const SyncEngineUtils = {
   /**
    * Cria uma configuração padrão para o SyncEngine
@@ -43,11 +39,11 @@ export const SyncEngineUtils = {
   createDefaultConfig: (serverUrl: string): SyncConfig => ({
     serverUrl,
     batchSize: 10,
-    syncInterval: 30000, // 30 segundos
+    syncInterval: 30000,
     maxRetries: 3,
-    initialRetryDelay: 1000, // 1 segundo
+    initialRetryDelay: 1000,
     backoffMultiplier: 2,
-    requestTimeout: 10000, // 10 segundos
+    requestTimeout: 10000,
   }),
 
   /**
@@ -60,37 +56,39 @@ export const SyncEngineUtils = {
   /**
    * Valida se uma configuração está correta
    */
-  validateConfig: (config: SyncConfig): { valid: boolean; errors: string[] } => {
+  validateConfig: (
+    config: SyncConfig
+  ): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
     if (!config.serverUrl || !config.serverUrl.trim()) {
-      errors.push('serverUrl é obrigatório');
+      errors.push("serverUrl é obrigatório");
     }
 
     if (config.batchSize <= 0) {
-      errors.push('batchSize deve ser maior que 0');
+      errors.push("batchSize deve ser maior que 0");
     }
 
     if (config.maxRetries < 0) {
-      errors.push('maxRetries deve ser maior ou igual a 0');
+      errors.push("maxRetries deve ser maior ou igual a 0");
     }
 
     if (config.initialRetryDelay < 0) {
-      errors.push('initialRetryDelay deve ser maior ou igual a 0');
+      errors.push("initialRetryDelay deve ser maior ou igual a 0");
     }
 
     if (config.backoffMultiplier <= 1) {
-      errors.push('backoffMultiplier deve ser maior que 1');
+      errors.push("backoffMultiplier deve ser maior que 1");
     }
 
     if (config.requestTimeout <= 0) {
-      errors.push('requestTimeout deve ser maior que 0');
+      errors.push("requestTimeout deve ser maior que 0");
     }
 
     try {
       new URL(config.serverUrl);
     } catch {
-      errors.push('serverUrl deve ser uma URL válida');
+      errors.push("serverUrl deve ser uma URL válida");
     }
 
     return {
@@ -109,17 +107,16 @@ export const SyncEngineUtils = {
   }),
 };
 
-// Constantes úteis
 export const SyncEngineConstants = {
   /**
    * Intervalos de sync comuns (em ms)
    */
   SYNC_INTERVALS: {
-    VERY_FAST: 5000,    // 5 segundos
-    FAST: 15000,        // 15 segundos
-    NORMAL: 30000,      // 30 segundos
-    SLOW: 60000,        // 1 minuto
-    VERY_SLOW: 300000,  // 5 minutos
+    VERY_FAST: 5000,
+    FAST: 15000,
+    NORMAL: 30000,
+    SLOW: 60000,
+    VERY_SLOW: 300000,
   },
 
   /**
@@ -136,29 +133,31 @@ export const SyncEngineConstants = {
    * Timeouts comuns (em ms)
    */
   TIMEOUTS: {
-    FAST: 5000,    // 5 segundos
-    NORMAL: 10000, // 10 segundos
-    SLOW: 30000,   // 30 segundos
+    FAST: 5000,
+    NORMAL: 10000,
+    SLOW: 30000,
   },
 
   /**
    * Delays de retry comuns (em ms)
    */
   RETRY_DELAYS: {
-    FAST: 500,    // 0.5 segundos
-    NORMAL: 1000, // 1 segundo
-    SLOW: 2000,   // 2 segundos
+    FAST: 500,
+    NORMAL: 1000,
+    SLOW: 2000,
   },
 };
 
-// Factory para criar instâncias pré-configuradas
 export const SyncEngineFactory = {
   /**
    * Cria um SyncEngine para desenvolvimento (com logs habilitados)
    */
-  createForDevelopment: (serverUrl: string, options?: Partial<SyncEngineOptions>) => {
+  createForDevelopment: (
+    serverUrl: string,
+    options?: Partial<SyncEngineOptions>
+  ) => {
     const config = SyncEngineUtils.createDefaultConfig(serverUrl);
-    
+
     return new SyncEngine({
       config: {
         ...config,
@@ -174,9 +173,12 @@ export const SyncEngineFactory = {
   /**
    * Cria um SyncEngine para produção (otimizado)
    */
-  createForProduction: (serverUrl: string, options?: Partial<SyncEngineOptions>) => {
+  createForProduction: (
+    serverUrl: string,
+    options?: Partial<SyncEngineOptions>
+  ) => {
     const config = SyncEngineUtils.createDefaultConfig(serverUrl);
-    
+
     return new SyncEngine({
       config: {
         ...config,
@@ -193,9 +195,12 @@ export const SyncEngineFactory = {
   /**
    * Cria um SyncEngine conservador (para dados críticos)
    */
-  createConservative: (serverUrl: string, options?: Partial<SyncEngineOptions>) => {
+  createConservative: (
+    serverUrl: string,
+    options?: Partial<SyncEngineOptions>
+  ) => {
     const config = SyncEngineUtils.createDefaultConfig(serverUrl);
-    
+
     return new SyncEngine({
       config: {
         ...config,
@@ -215,9 +220,12 @@ export const SyncEngineFactory = {
   /**
    * Cria um SyncEngine agressivo (para sincronização rápida)
    */
-  createAggressive: (serverUrl: string, options?: Partial<SyncEngineOptions>) => {
+  createAggressive: (
+    serverUrl: string,
+    options?: Partial<SyncEngineOptions>
+  ) => {
     const config = SyncEngineUtils.createDefaultConfig(serverUrl);
-    
+
     return new SyncEngine({
       config: {
         ...config,

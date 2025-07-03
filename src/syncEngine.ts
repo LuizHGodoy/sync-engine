@@ -1,8 +1,8 @@
-import { AppState, AppStateStatus } from 'react-native';
-import { QueueStorage } from './queueStorage';
-import { NetMonitor } from './netMonitor';
-import { RetryPolicy, RetryPolicies } from './retryPolicy';
-import { ConflictResolver, ConflictStrategies } from './conflictResolver';
+import { AppState, AppStateStatus } from "react-native";
+import { QueueStorage } from "./queueStorage";
+import { NetMonitor } from "./netMonitor";
+import { RetryPolicy, RetryPolicies } from "./retryPolicy";
+import { ConflictResolver, ConflictStrategies } from "./conflictResolver";
 import {
   QueueItem,
   SyncConfig,
@@ -11,7 +11,7 @@ import {
   SyncEventListener,
   SyncEvent,
   ServerResponse,
-} from './types';
+} from "./types";
 
 /**
  * Engine principal de sincronização bidirecional
@@ -22,7 +22,7 @@ export class SyncEngine {
   private retryPolicy: RetryPolicy;
   private conflictResolver: ConflictResolver;
   private config: SyncConfig;
-  private hooks: SyncEngineOptions['hooks'];
+  private hooks: SyncEngineOptions["hooks"];
   private debug: boolean;
 
   private isInitialized: boolean = false;
@@ -38,7 +38,6 @@ export class SyncEngine {
     this.hooks = options.hooks || {};
     this.debug = options.debug || false;
 
-    // Inicializa componentes
     this.storage = new QueueStorage();
     this.netMonitor = new NetMonitor();
     this.retryPolicy = RetryPolicies.default();
@@ -59,20 +58,18 @@ export class SyncEngine {
     }
 
     try {
-      this.log('Inicializando Sync Engine...');
+      this.log("Inicializando Sync Engine...");
 
-      // Inicializa componentes
       await this.storage.initialize();
       await this.netMonitor.initialize();
 
-      // Configura listeners
       this.setupNetworkListener();
       this.setupAppStateListener();
 
       this.isInitialized = true;
-      this.log('Sync Engine inicializada com sucesso');
+      this.log("Sync Engine inicializada com sucesso");
     } catch (error) {
-      this.log('Erro ao inicializar Sync Engine:', error);
+      this.log("Erro ao inicializar Sync Engine:", error);
       throw error;
     }
   }
@@ -90,17 +87,14 @@ export class SyncEngine {
     }
 
     this.isActive = true;
-    this.log('Iniciando sincronização automática');
+    this.log("Iniciando sincronização automática");
 
-    // Executa sync inicial se estiver online
     if (this.netMonitor.getConnectionStatus()) {
       await this.forceSync();
     }
-
-    // Configura intervalo de sync automático
     this.setupSyncInterval();
-    
-    this.emitEvent('sync_started', { autoSync: true });
+
+    this.emitEvent("sync_started", { autoSync: true });
   }
 
   /**
@@ -112,14 +106,14 @@ export class SyncEngine {
     }
 
     this.isActive = false;
-    this.log('Parando sincronização automática');
+    this.log("Parando sincronização automática");
 
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
       this.syncInterval = undefined;
     }
 
-    this.emitEvent('sync_started', { autoSync: false });
+    this.emitEvent("sync_started", { autoSync: false });
   }
 
   /**
@@ -129,7 +123,7 @@ export class SyncEngine {
     id: string,
     type: string,
     payload: any,
-    status: QueueItem['status'] = 'pending'
+    status: QueueItem["status"] = "pending"
   ): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -144,17 +138,19 @@ export class SyncEngine {
       });
 
       this.log(`Item adicionado à queue: ${id} (${type})`);
-      this.emitEvent('item_queued', { id, type, payload });
+      this.emitEvent("item_queued", { id, type, payload });
 
-      // Executa hooks
-      await this.executeHook('onQueueChange', await this.getStatus());
+      await this.executeHook("onQueueChange", await this.getStatus());
 
-      // Se estiver online e ativo, tenta sincronizar imediatamente
-      if (this.isActive && this.netMonitor.getConnectionStatus() && !this.isSyncing) {
+      if (
+        this.isActive &&
+        this.netMonitor.getConnectionStatus() &&
+        !this.isSyncing
+      ) {
         setTimeout(() => this.forceSync(), 100);
       }
     } catch (error) {
-      this.log('Erro ao adicionar item à queue:', error);
+      this.log("Erro ao adicionar item à queue:", error);
       throw error;
     }
   }
@@ -162,19 +158,23 @@ export class SyncEngine {
   /**
    * Força uma sincronização imediata
    */
-  async forceSync(): Promise<{ success: boolean; syncedItems: number; errors: number }> {
+  async forceSync(): Promise<{
+    success: boolean;
+    syncedItems: number;
+    errors: number;
+  }> {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
     if (this.isSyncing) {
-      this.log('Sync já em execução, aguardando...');
+      this.log("Sync já em execução, aguardando...");
       await this.waitForSyncCompletion();
       return { success: true, syncedItems: 0, errors: 0 };
     }
 
     if (!this.netMonitor.getConnectionStatus()) {
-      this.log('Sem conexão, sync cancelado');
+      this.log("Sem conexão, sync cancelado");
       return { success: false, syncedItems: 0, errors: 0 };
     }
 
@@ -183,49 +183,46 @@ export class SyncEngine {
     let errors = 0;
 
     try {
-      this.log('Iniciando sincronização forçada');
-      this.emitEvent('sync_started');
+      this.log("Iniciando sincronização forçada");
+      this.emitEvent("sync_started");
 
-      // Obtém items pendentes
-      const pendingItems = await this.storage.getPendingItems(this.config.batchSize);
-      
+      const pendingItems = await this.storage.getPendingItems(
+        this.config.batchSize
+      );
+
       if (pendingItems.length === 0) {
-        this.log('Nenhum item pendente para sincronizar');
+        this.log("Nenhum item pendente para sincronizar");
         return { success: true, syncedItems: 0, errors: 0 };
       }
 
       this.log(`Sincronizando ${pendingItems.length} items`);
 
-      // Executa hook antes do sync
-      await this.executeHook('onBeforeSync', pendingItems);
+      await this.executeHook("onBeforeSync", pendingItems);
 
-      // Processa items em batch
       for (const item of pendingItems) {
         try {
           await this.syncItem(item);
           syncedItems++;
-          this.emitEvent('item_synced', { item });
+          this.emitEvent("item_synced", { item });
         } catch (error) {
           errors++;
           this.log(`Erro ao sincronizar item ${item.id}:`, error);
-          this.emitEvent('item_failed', { item, error });
+          this.emitEvent("item_failed", { item, error });
         }
       }
 
-      // Executa hook após sync
-      await this.executeHook('onSyncSuccess', pendingItems);
+      await this.executeHook("onSyncSuccess", pendingItems);
 
       this.lastSync = Date.now();
       this.log(`Sync completo: ${syncedItems} sincronizados, ${errors} erros`);
-      
-      this.emitEvent('sync_completed', { syncedItems, errors });
-      
-      return { success: errors === 0, syncedItems, errors };
 
+      this.emitEvent("sync_completed", { syncedItems, errors });
+
+      return { success: errors === 0, syncedItems, errors };
     } catch (error) {
-      this.log('Erro durante sincronização:', error);
-      this.emitEvent('sync_failed', { error });
-      await this.executeHook('onSyncError', error, []);
+      this.log("Erro durante sincronização:", error);
+      this.emitEvent("sync_failed", { error });
+      await this.executeHook("onSyncError", error, []);
       throw error;
     } finally {
       this.isSyncing = false;
@@ -247,7 +244,7 @@ export class SyncEngine {
     }
 
     const stats = await this.storage.getQueueStats();
-    
+
     return {
       isActive: this.isActive,
       lastSync: this.lastSync,
@@ -280,7 +277,7 @@ export class SyncEngine {
    */
   async clearSyncedItems(): Promise<void> {
     await this.storage.removeSyncedItems();
-    this.log('Items sincronizados removidos');
+    this.log("Items sincronizados removidos");
   }
 
   /**
@@ -288,9 +285,9 @@ export class SyncEngine {
    */
   async retryFailedItems(): Promise<void> {
     const errorItems = await this.storage.getErrorItems();
-    
+
     for (const item of errorItems) {
-      await this.storage.updateItemStatus(item.id, 'pending');
+      await this.storage.updateItemStatus(item.id, "pending");
     }
 
     this.log(`${errorItems.length} items com erro foram marcados para retry`);
@@ -304,7 +301,7 @@ export class SyncEngine {
    * Finaliza a engine
    */
   async destroy(): Promise<void> {
-    this.log('Finalizando Sync Engine');
+    this.log("Finalizando Sync Engine");
 
     this.stop();
 
@@ -319,46 +316,45 @@ export class SyncEngine {
     this.isInitialized = false;
   }
 
-  // Métodos privados
-
   private async syncItem(item: QueueItem): Promise<void> {
     return this.retryPolicy.executeWithRetry(
       async () => {
         const response = await this.sendToServer(item);
-        
+
         if (response.success) {
-          await this.storage.updateItemStatus(item.id, 'synced');
+          await this.storage.updateItemStatus(item.id, "synced");
         } else if (response.conflicts && response.conflicts.length > 0) {
-          // Resolve conflitos
           const conflict = response.conflicts[0];
-          const resolvedItem = await this.conflictResolver.resolve(item, conflict.serverData);
-          
-          // Atualiza o item resolvido
+          const resolvedItem = await this.conflictResolver.resolve(
+            item,
+            conflict.serverData
+          );
+
           await this.storage.removeItem(item.id);
           await this.storage.addItem({
             id: resolvedItem.id,
             type: resolvedItem.type,
             payload: resolvedItem.payload,
-            status: 'pending',
+            status: "pending",
           });
         } else {
-          throw new Error(response.error || 'Erro desconhecido no servidor');
+          throw new Error(response.error || "Erro desconhecido no servidor");
         }
       },
       (attempt, error) => {
         this.log(`Retry ${attempt} para item ${item.id}:`, error.message);
-        this.storage.updateItemStatus(item.id, 'error', true);
+        this.storage.updateItemStatus(item.id, "error", true);
       }
     );
   }
 
   private async sendToServer(item: QueueItem): Promise<ServerResponse> {
     const endpoint = `${this.config.serverUrl}/sync`;
-    
+
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...this.config.headers,
       },
       body: JSON.stringify({
@@ -367,7 +363,7 @@ export class SyncEngine {
         payload: item.payload,
         timestamp: item.updatedAt,
       }),
-      signal: (new AbortController()).signal,
+      signal: new AbortController().signal,
     });
 
     if (!response.ok) {
@@ -388,9 +384,9 @@ export class SyncEngine {
 
   private setupNetworkListener(): void {
     this.netMonitor.addEventListener((event) => {
-      if (event.type === 'connection_changed') {
-        this.emitEvent('connection_changed', event.data);
-        
+      if (event.type === "connection_changed") {
+        this.emitEvent("connection_changed", event.data);
+
         if (event.data?.isOnline && this.isActive && !this.isSyncing) {
           setTimeout(() => this.forceSync(), 1000);
         }
@@ -399,17 +395,29 @@ export class SyncEngine {
   }
 
   private setupAppStateListener(): void {
-    this.appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active' && this.isActive && this.netMonitor.getConnectionStatus() && !this.isSyncing) {
-        setTimeout(() => this.forceSync(), 500);
+    this.appStateSubscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        if (
+          nextAppState === "active" &&
+          this.isActive &&
+          this.netMonitor.getConnectionStatus() &&
+          !this.isSyncing
+        ) {
+          setTimeout(() => this.forceSync(), 500);
+        }
       }
-    });
+    );
   }
 
   private setupSyncInterval(): void {
     if (this.config.syncInterval > 0) {
       this.syncInterval = setInterval(() => {
-        if (this.isActive && this.netMonitor.getConnectionStatus() && !this.isSyncing) {
+        if (
+          this.isActive &&
+          this.netMonitor.getConnectionStatus() &&
+          !this.isSyncing
+        ) {
           this.forceSync();
         }
       }, this.config.syncInterval);
@@ -418,9 +426,9 @@ export class SyncEngine {
 
   private async waitForSyncCompletion(timeout: number = 30000): Promise<void> {
     const startTime = Date.now();
-    
-    while (this.isSyncing && (Date.now() - startTime) < timeout) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+
+    while (this.isSyncing && Date.now() - startTime < timeout) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
@@ -435,7 +443,7 @@ export class SyncEngine {
     }
   }
 
-  private emitEvent(type: SyncEvent['type'], data?: any, error?: Error): void {
+  private emitEvent(type: SyncEvent["type"], data?: any, error?: Error): void {
     const event: SyncEvent = {
       type,
       timestamp: Date.now(),
@@ -443,11 +451,11 @@ export class SyncEngine {
       error,
     };
 
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
-        this.log('Erro ao notificar listener:', error);
+        this.log("Erro ao notificar listener:", error);
       }
     });
   }
@@ -459,7 +467,7 @@ export class SyncEngine {
 
   private log(...args: any[]): void {
     if (this.debug) {
-      console.log('[SyncEngine]', ...args);
+      console.log("[SyncEngine]", ...args);
     }
   }
 }
