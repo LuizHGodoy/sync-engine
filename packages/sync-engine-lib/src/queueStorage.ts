@@ -215,9 +215,6 @@ export class QueueStorage {
     };
   }
 
-  /**
-   * Retorna todos os itens da fila, independente do status
-   */
   public async getAllItems(): Promise<QueueItem[]> {
     if (!this.db) throw new Error("Banco de dados não inicializado");
     const selectSQL = "SELECT * FROM sync_queue ORDER BY createdAt DESC";

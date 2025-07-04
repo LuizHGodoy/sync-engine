@@ -244,9 +244,6 @@ export class SyncEngine {
     };
   }
 
-  /**
-   * Retorna todos os itens da fila local (útil para debug e apps demo)
-   */
   public async getLocalQueueItems(): Promise<QueueItem[]> {
     if (typeof this.storage.getAllItems === "function") {
       return this.storage.getAllItems();
@@ -455,10 +452,6 @@ export class SyncEngine {
     }
   }
 
-  /**
-   * Força o modo online/offline manualmente (para testes/demos)
-   * Passe null para voltar ao modo automático (NetInfo)
-   */
   public setForcedOnline(isOnline: boolean | null) {
     this.netMonitor.setForcedOnline(isOnline);
   }

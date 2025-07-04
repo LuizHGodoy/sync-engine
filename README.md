@@ -1,496 +1,155 @@
-# Monorepo: Sync Engine
+# Sync Engine Monorepo
 
-Este repositório é um monorepo contendo:
+Este repositório contém uma solução completa para sincronização bidirecional offline-first em React Native/Expo, incluindo:
 
-- `packages/sync-engine-lib`: Biblioteca TypeScript para sincronização bidirecional offline-first em React Native/Expo.
-- `apps/demo-app`: App de demonstração Expo usando a biblioteca.
+- **`packages/sync-engine-lib`**: Biblioteca TypeScript para sincronização offline/online com SQLite e autosync.
+- **`apps/demo-app`**: App Expo demonstrando o uso da lib em um Todo List offline-first.
+- **`apps/demo-server`**: Servidor Express para simular backend e testar o fluxo de sync.
 
 ---
 
-# 📦 Sync Engine Lib
+## 🚀 Visão Geral
 
-Uma biblioteca TypeScript para sincronização bidirecional offline-first em React Native/Expo SDK 53. Permite que múltiplos apps reutilizem esta lib de forma plug-and-play, garantindo experiência offline robusta com autosync, retry inteligente e resolução de conflitos.
+- Sincronização bidirecional: app <-> servidor
+- Funciona 100% offline: todas as operações são salvas localmente e sincronizadas quando a conexão volta
+- Resolução de conflitos, retry automático, fila persistente (SQLite)
+- Pronto para React Native/Expo SDK 53+
 
-## ✨ Características
+---
 
-- 🔄 **Sincronização bidirecional** cliente ↔ servidor
-- 📱 **Offline-first** com queue persistente SQLite
-- 🚀 **Autosync** ao conectar, abrir app ou voltar do background
-- 🔁 **Retry automático** com backoff exponencial
-- ⚔️ **Resolução de conflitos** pluggável
-- 📊 **Observabilidade** com status global e eventos
-- 🎣 **Hooks customizáveis** (`onBeforeSync`, `onSuccess`, `onError`)
-- 🧩 **Modular** e extensível
-- 📚 **Totalmente tipado** em TypeScript
+## 📦 Sync Engine Lib
 
-## 🛠️ Instalação
+Biblioteca TypeScript para sincronização bidirecional offline-first.
+
+### Instalação
 
 ```bash
-npm install sync-engine-lib
-# ou
 yarn add sync-engine-lib
+# ou
+npm install sync-engine-lib
 ```
 
-### Dependências
-
-Esta biblioteca requer as seguintes peer dependencies:
+**Peer dependencies:**
 
 ```bash
-npm install expo-sqlite @react-native-community/netinfo
+yarn add expo-sqlite @react-native-community/netinfo
 ```
 
-## 🚀 Uso Básico
-
-### Configuração Simples
+### Uso Básico
 
 ```typescript
 import { SyncEngineFactory } from "sync-engine-lib";
 
-// Para desenvolvimento (com logs)
 const syncEngine = SyncEngineFactory.createForDevelopment(
-  "https://api.meuapp.com"
+  "http://localhost:4000"
 );
-
-// Para produção (otimizado)
-const syncEngine = SyncEngineFactory.createForProduction(
-  "https://api.meuapp.com"
-);
-
-// Inicializa e inicia
 await syncEngine.initialize();
 await syncEngine.start();
-```
 
-### Configuração Manual
-
-```typescript
-import {
-  SyncEngine,
-  SyncEngineUtils,
-  ConflictStrategies,
-} from "sync-engine-lib";
-
-const config = SyncEngineUtils.createDefaultConfig("https://api.meuapp.com");
-
-const syncEngine = new SyncEngine({
-  config: {
-    ...config,
-    batchSize: 15,
-    syncInterval: 30000, // 30 segundos
-    maxRetries: 5,
-  },
-  conflictStrategy: ConflictStrategies.timestampWins(),
-  debug: true,
-  hooks: {
-    onBeforeSync: async (items) => {
-      console.log(`Sincronizando ${items.length} items`);
-    },
-    onSyncSuccess: async (items) => {
-      console.log("Sync concluído com sucesso");
-    },
-    onSyncError: async (error, items) => {
-      console.error("Erro no sync:", error);
-    },
-  },
-});
-
-await syncEngine.initialize();
-await syncEngine.start();
-```
-
-## 📝 Adicionando Items à Queue
-
-```typescript
-import { SyncEngineUtils } from "sync-engine-lib";
-
-// Adiciona um item à queue
-await syncEngine.addToQueue(
-  SyncEngineUtils.generateId(), // ID único
-  "user_profile", // Tipo do item
-  {
-    // Payload
-    name: "João Silva",
-    email: "joao@email.com",
-    updatedAt: Date.now(),
-  }
-);
-
-// Item de check-in
-await syncEngine.addToQueue(SyncEngineUtils.generateId(), "checkin", {
-  location: { lat: -23.55052, lng: -46.633308 },
-  timestamp: Date.now(),
-  notes: "Check-in no escritório",
-});
-```
-
-## 🔄 Sincronização
-
-```typescript
-// Força uma sincronização imediata
-const result = await syncEngine.forceSync();
-console.log(`${result.syncedItems} sincronizados, ${result.errors} erros`);
-
-// Verifica status atual
-const status = await syncEngine.getStatus();
-console.log("Status:", status);
-/*
-{
-  isActive: true,
-  lastSync: 1671234567890,
-  pendingItems: 3,
-  errorItems: 0,
-  isOnline: true,
-  isSyncing: false
-}
-*/
-```
-
-## 🎭 Estratégias de Conflito
-
-### Estratégias Predefinidas
-
-```typescript
-import { ConflictStrategies } from "sync-engine-lib";
-
-// Cliente sempre vence
-ConflictStrategies.clientWins();
-
-// Servidor sempre vence
-ConflictStrategies.serverWins();
-
-// Timestamp mais recente vence
-ConflictStrategies.timestampWins();
-
-// Merge simples de propriedades
-ConflictStrategies.merge();
-
-// Merge inteligente preservando campos específicos
-ConflictStrategies.smartMerge(["id", "createdAt", "userId"]);
-
-// Baseado em versão
-ConflictStrategies.versionBased();
-
-// Mantém ambas as versões
-ConflictStrategies.keepBoth();
-
-// Força tratamento manual
-ConflictStrategies.manual();
-```
-
-### Estratégia Customizada
-
-```typescript
-const customStrategy = ConflictStrategies.custom(
-  async (localItem, serverItem) => {
-    // Lógica personalizada de resolução
-    if (localItem.payload.priority > serverItem.priority) {
-      return {
-        ...localItem,
-        payload: {
-          ...localItem.payload,
-          conflictResolved: true,
-          serverVersion: serverItem,
-        },
-        updatedAt: Date.now(),
-      };
-    }
-
-    return {
-      ...localItem,
-      payload: serverItem,
-      updatedAt: Date.now(),
-    };
-  }
-);
-
-const syncEngine = new SyncEngine({
-  config,
-  conflictStrategy: customStrategy,
-});
-```
-
-## 📡 Eventos e Observabilidade
-
-```typescript
-// Adiciona listener de eventos
-syncEngine.addEventListener((event) => {
-  switch (event.type) {
-    case "sync_started":
-      console.log("Sync iniciado");
-      break;
-
-    case "sync_completed":
-      console.log("Sync completo:", event.data);
-      break;
-
-    case "item_queued":
-      console.log("Item adicionado:", event.data);
-      break;
-
-    case "connection_changed":
-      console.log("Conexão mudou:", event.data.isOnline);
-      break;
-  }
-});
-```
-
-## 🔧 Configurações Avançadas
-
-### Configuração Completa
-
-```typescript
-import { SyncEngine, SyncEngineConstants } from "sync-engine-lib";
-
-const syncEngine = new SyncEngine({
-  config: {
-    serverUrl: "https://api.meuapp.com",
-    batchSize: SyncEngineConstants.BATCH_SIZES.LARGE,
-    syncInterval: SyncEngineConstants.SYNC_INTERVALS.FAST,
-    maxRetries: 3,
-    initialRetryDelay: SyncEngineConstants.RETRY_DELAYS.NORMAL,
-    backoffMultiplier: 2,
-    requestTimeout: SyncEngineConstants.TIMEOUTS.NORMAL,
-    headers: {
-      Authorization: "Bearer token",
-      "X-App-Version": "1.0.0",
-    },
-  },
-  conflictStrategy: ConflictStrategies.smartMerge(["id", "userId"]),
-  debug: __DEV__,
-  hooks: {
-    onBeforeSync: async (items) => {
-      // Validações antes do sync
-      items.forEach((item) => {
-        if (!item.payload.userId) {
-          throw new Error("userId é obrigatório");
-        }
-      });
-    },
-
-    onSyncSuccess: async (items) => {
-      // Cleanup ou notificações
-      await analytics.track("sync_success", { count: items.length });
-    },
-
-    onSyncError: async (error, items) => {
-      // Log de erro ou fallback
-      await errorReporting.captureException(error);
-    },
-
-    onQueueChange: async (status) => {
-      // Atualiza UI com status
-      updateSyncStatus(status);
-    },
-
-    onConnectionChange: async (isOnline) => {
-      // Notifica usuário sobre conectividade
-      showConnectionStatus(isOnline);
-    },
-  },
-});
-```
-
-## 🧪 Utilitários
-
-```typescript
-import { SyncEngineUtils, ConflictUtils } from "sync-engine-lib";
-
-// Validação de configuração
-const validation = SyncEngineUtils.validateConfig(config);
-if (!validation.valid) {
-  console.error("Configuração inválida:", validation.errors);
-}
-
-// Análise de conflitos
-const hasChanges = ConflictUtils.hasSignificantChanges(localItem, serverItem);
-const conflictType = ConflictUtils.identifyConflictType(localItem, serverItem);
-const diffReport = ConflictUtils.createDiffReport(localItem, serverItem);
-```
-
-## 🏭 Factories
-
-```typescript
-import { SyncEngineFactory } from "sync-engine-lib";
-
-// Desenvolvimento
-const devEngine = SyncEngineFactory.createForDevelopment("https://api.dev.com");
-
-// Produção
-const prodEngine = SyncEngineFactory.createForProduction(
-  "https://api.prod.com"
-);
-
-// Conservador (dados críticos)
-const conservativeEngine =
-  SyncEngineFactory.createConservative("https://api.com");
-
-// Agressivo (sync rápido)
-const aggressiveEngine = SyncEngineFactory.createAggressive("https://api.com");
-```
-
-## 🚧 Gerenciamento de Erros
-
-```typescript
-// Retry de items com erro
-await syncEngine.retryFailedItems();
-
-// Limpeza de items sincronizados
-await syncEngine.clearSyncedItems();
-
-// Status detalhado
-const status = await syncEngine.getStatus();
-if (status.errorItems > 0) {
-  console.log(`${status.errorItems} items com erro`);
-}
-```
-
-## 🔌 API do Servidor
-
-Sua API deve responder no formato:
-
-```typescript
-// POST /sync
-{
-  "success": true,
-  "data": { /* dados atualizados */ },
-  "conflicts": [
-    {
-      "id": "item_id",
-      "serverData": { /* versão do servidor */ },
-      "conflictType": "version" // ou "concurrent", "deleted"
-    }
-  ]
-}
-```
-
-## 📱 Integração com React Native
-
-```typescript
-// hooks/useSyncEngine.ts
-import { useEffect, useState } from "react";
-import { SyncEngineFactory } from "sync-engine-lib";
-
-export const useSyncEngine = (serverUrl: string) => {
-  const [syncEngine] = useState(() =>
-    SyncEngineFactory.createForProduction(serverUrl)
-  );
-  const [status, setStatus] = useState(null);
-
-  useEffect(() => {
-    const initSync = async () => {
-      await syncEngine.initialize();
-      await syncEngine.start();
-
-      // Atualiza status
-      const updateStatus = async () => {
-        setStatus(await syncEngine.getStatus());
-      };
-
-      syncEngine.addEventListener(updateStatus);
-      updateStatus();
-    };
-
-    initSync();
-
-    return () => {
-      syncEngine.destroy();
-    };
-  }, []);
-
-  return { syncEngine, status };
-};
-```
-
-## 🧩 Exemplos Práticos
-
-### App de E-commerce
-
-```typescript
-// Produto adicionado ao carrinho offline
-await syncEngine.addToQueue(SyncEngineUtils.generateId(), "cart_item", {
-  productId: "123",
-  quantity: 2,
-  price: 29.99,
-  addedAt: Date.now(),
-});
-
-// Pedido realizado offline
-await syncEngine.addToQueue(SyncEngineUtils.generateId(), "order", {
-  items: cartItems,
-  total: 59.98,
-  shippingAddress: address,
+// Adiciona item à fila (offline ou online)
+await syncEngine.addToQueue(SyncEngineUtils.generateId(), "todo", {
+  text: "Minha tarefa",
+  done: false,
   createdAt: Date.now(),
+  updatedAt: Date.now(),
 });
 ```
 
-### App de CRM
+### Fluxo Offline-First
+
+- **Online:** O app sincroniza automaticamente com o servidor.
+- **Offline:** Todas as operações são salvas localmente (SQLite). Nenhuma requisição é feita ao servidor.
+- **Quando volta a ficar online:** A SyncEngine envia tudo que estava pendente para o servidor.
+
+Você pode forçar o modo offline/online para testes:
 
 ```typescript
-// Contato criado offline
-await syncEngine.addToQueue(SyncEngineUtils.generateId(), "contact", {
-  name: "Cliente Novo",
-  email: "cliente@email.com",
-  phone: "+5511999999999",
-  source: "mobile_app",
-  createdAt: Date.now(),
-});
-
-// Atividade registrada
-await syncEngine.addToQueue(SyncEngineUtils.generateId(), "activity", {
-  contactId: "contact_123",
-  type: "call",
-  notes: "Ligação de follow-up",
-  duration: 300,
-  completedAt: Date.now(),
-});
+syncEngine.setForcedOnline(false); // Força modo offline
+syncEngine.setForcedOnline(true); // Força modo online
+syncEngine.setForcedOnline(null); // Volta ao modo automático
 ```
 
-## 🔧 Troubleshooting
+---
 
-### Problemas Comuns
+## 📱 Demo App (Expo)
 
-1. **Items não sincronizam**
+App de Todo List demonstrando o uso da Sync Engine.
 
-   ```typescript
-   // Verifica conectividade
-   const status = await syncEngine.getStatus();
-   if (!status.isOnline) {
-     console.log("Sem conexão");
-   }
+![Demo do app offline-first](apps/demo-app/assets/images/tela-demo.png)
 
-   // Força sync manual
-   await syncEngine.forceSync();
-   ```
+### Rodando o app
 
-2. **Muitos conflitos**
+```bash
+cd apps/demo-app
+yarn install
+npx expo start
+```
 
-   ```typescript
-   // Use estratégia mais permissiva
-   syncEngine.conflictResolver.setStrategy(ConflictStrategies.merge());
-   ```
+- O app funciona 100% offline-first.
+- Use o botão "Simular Offline" para testar o fluxo offline.
+- Crie, edite e delete tarefas mesmo sem internet. Ao voltar para online, tudo será sincronizado.
 
-3. **Performance lenta**
-   ```typescript
-   // Reduza batch size
-   const config = {
-     ...currentConfig,
-     batchSize: 5,
-     syncInterval: 60000, // 1 minuto
-   };
-   ```
+---
+
+## 🖥️ Demo Server
+
+Servidor Express simples para simular backend e testar a sincronização.
+
+### Rodando o servidor
+
+```bash
+cd apps/demo-server
+yarn install
+yarn start
+```
+
+- O servidor expõe `/sync` (POST) e `/todos` (GET)
+- Suporta soft delete, merge simples e atualização de tarefas
+
+---
+
+## 🔄 Exemplo de Fluxo Completo
+
+1. Inicie o servidor: `cd apps/demo-server && yarn start`
+2. Inicie o app: `cd apps/demo-app && npx expo start`
+3. No app, adicione/edite/delete tarefas offline
+4. Volte para online: a SyncEngine sincroniza tudo automaticamente
+5. Veja o log de eventos no app e os dados atualizados no servidor
+
+---
+
+## 🛠️ Comandos Úteis
+
+- **Build da lib:**
+  ```bash
+  cd packages/sync-engine-lib
+  yarn build
+  ```
+- **Limpar cache do Expo:**
+  ```bash
+  npx expo start -c
+  ```
+- **Reinstalar dependências:**
+  ```bash
+  yarn install
+  ```
+
+---
 
 ## 🤝 Contribuindo
 
 1. Fork o projeto
 2. Crie uma branch: `git checkout -b feature/nova-feature`
-3. Commit: `git commit -m 'Adiciona nova feature'`
+3. Commit: `git commit -m 'feat: nova feature'`
 4. Push: `git push origin feature/nova-feature`
-5. Pull Request
+5. Abra um Pull Request
+
+---
 
 ## 📄 Licença
 
 MIT
 
-## 🙏 Créditos
+---
 
-Desenvolvido para React Native/Expo SDK 53 com TypeScript, SQLite e NetInfo.
+Desenvolvido para React Native/Expo SDK 53+ com TypeScript, SQLite e NetInfo.
