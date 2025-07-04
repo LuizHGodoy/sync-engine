@@ -1,4 +1,4 @@
 node_modules
 
 # Arquivos de build
-/dist
+/packages/sync-engine-lib/dist

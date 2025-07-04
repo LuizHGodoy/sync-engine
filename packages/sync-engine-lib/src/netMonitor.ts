@@ -5,6 +5,7 @@ export class NetMonitor {
   private isOnline: boolean = false;
   private listeners: SyncEventListener[] = [];
   private unsubscribe: (() => void) | null = null;
+  private forcedOnline: boolean | null = null;
 
   async initialize(): Promise<void> {
     const state = await NetInfo.fetch();
@@ -21,7 +22,15 @@ export class NetMonitor {
   }
 
   getConnectionStatus(): boolean {
+    if (this.forcedOnline !== null) {
+      return this.forcedOnline;
+    }
     return this.isOnline;
+  }
+
+  setForcedOnline(isOnline: boolean | null) {
+    this.forcedOnline = isOnline;
+    this.notifyListeners();
   }
 
   addEventListener(listener: SyncEventListener): void {

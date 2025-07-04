@@ -58,7 +58,7 @@ export class QueueStorage {
     };
 
     const insertSQL = `
-      INSERT INTO sync_queue (id, type, payload, status, retries, lastTriedAt, createdAt, updatedAt)
+      INSERT OR REPLACE INTO sync_queue (id, type, payload, status, retries, lastTriedAt, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -213,6 +213,16 @@ export class QueueStorage {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
+  }
+
+  /**
+   * Retorna todos os itens da fila, independente do status
+   */
+  public async getAllItems(): Promise<QueueItem[]> {
+    if (!this.db) throw new Error("Banco de dados não inicializado");
+    const selectSQL = "SELECT * FROM sync_queue ORDER BY createdAt DESC";
+    const result = await this.db.getAllAsync(selectSQL);
+    return result.map(this.mapRowToQueueItem);
   }
 
   async close(): Promise<void> {

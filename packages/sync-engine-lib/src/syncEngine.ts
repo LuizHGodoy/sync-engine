@@ -88,6 +88,16 @@ export class SyncEngine {
     this.emitEvent("sync_started", { autoSync: true });
   }
 
+  async getQueuedItems(): Promise<QueueItem[]> {
+    if (!this.isInitialized) {
+      this.log(
+        "Atenção: Sync Engine não inicializada. Retornando array vazio."
+      );
+      return [];
+    }
+    return this.storage.getAllItems();
+  }
+
   stop(): void {
     if (!this.isActive) {
       return;
@@ -232,6 +242,16 @@ export class SyncEngine {
       isOnline: this.netMonitor.getConnectionStatus(),
       isSyncing: this.isSyncing,
     };
+  }
+
+  /**
+   * Retorna todos os itens da fila local (útil para debug e apps demo)
+   */
+  public async getLocalQueueItems(): Promise<QueueItem[]> {
+    if (typeof this.storage.getAllItems === "function") {
+      return this.storage.getAllItems();
+    }
+    return [];
   }
 
   addEventListener(listener: SyncEventListener): void {
@@ -433,5 +453,13 @@ export class SyncEngine {
     if (this.debug) {
       console.log("[SyncEngine]", ...args);
     }
+  }
+
+  /**
+   * Força o modo online/offline manualmente (para testes/demos)
+   * Passe null para voltar ao modo automático (NetInfo)
+   */
+  public setForcedOnline(isOnline: boolean | null) {
+    this.netMonitor.setForcedOnline(isOnline);
   }
 }
