@@ -1,0 +1,123 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+/* Paleta principal */
+:root {
+  --color-primary: #ff9900;
+  --color-bg: #fff;
+  --color-text: #181818;
+  --color-card-bg: #f8f8f8;
+  --color-card-shadow: 0 2px 16px #0001;
+  --color-border: #ececec;
+}
+[data-theme="dark"] {
+  --color-primary: #ff9900;
+  --color-bg: #111;
+  --color-text: #fff;
+  --color-card-bg: #181818;
+  --color-card-shadow: 0 2px 24px #0008;
+  --color-border: #222;
+}
+
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    120deg,
+    var(--color-primary) 0%,
+    var(--color-bg) 100%
+  );
+  color: var(--color-text);
+  box-shadow: 0 2px 32px #0002;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.button--highlight {
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  border-radius: 2rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #ff990033;
+  transition: transform 0.1s;
+}
+.button--highlight:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px #ff990055;
+}
+
+.features {
+  background: var(--color-bg);
+  padding: 2.5rem 0 2rem 0;
+}
+.card {
+  background: var(--color-card-bg);
+  border-radius: 1.2rem;
+  box-shadow: var(--color-card-shadow);
+  border: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.card__body {
+  padding: 2rem 1.2rem 1.2rem 1.2rem;
+  color: var(--color-text);
+}
+.card:hover {
+  box-shadow: 0 4px 32px #ff990044;
+  border: 1.5px solid var(--color-primary);
+}
+
+.quickStart {
+  background: var(--color-card-bg);
+  border-radius: 1.2rem;
+  box-shadow: var(--color-card-shadow);
+  margin: 2rem auto;
+  padding: 2rem 1.5rem;
+  max-width: 700px;
+}
+.quickStart h2 {
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+.quickStart pre {
+  background: #222;
+  color: #fff;
+  border-radius: 0.8rem;
+  padding: 1.2rem;
+  font-size: 1.05rem;
+  overflow-x: auto;
+  box-shadow: 0 2px 16px #0004;
+}
+[data-theme="light"] .quickStart pre {
+  background: #f4f4f4;
+  color: #181818;
+}
+
+.screenshot {
+  margin: 3rem 0 2rem 0;
+}
+.screenshot h2 {
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+.screenshot img {
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 32px #ff990044, 0 2px 16px #0003;
+  border: 2px solid var(--color-primary);
+  background: #fff;
+}
