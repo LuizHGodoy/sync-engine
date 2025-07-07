@@ -22,8 +22,13 @@
   "author": "LuizHGodoy",
   "license": "MIT",
   "peerDependencies": {
-    "expo-sqlite": "^14.0.0",
-    "@react-native-community/netinfo": "^11.0.0"
+    "@react-native-community/netinfo": "^11.0.0",
+    "expo-sqlite": "^14.0.0"
+  },
+  "peerDependenciesOptional": {
+    "expo-background-task": "^1.0.0",
+    "expo-task-manager": "^11.0.0",
+    "react-native-background-job": "^1.1.4"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -36,5 +41,10 @@
   "files": [
     "dist",
     "README.md"
-  ]
+  ],
+  "dependencies": {
+    "expo-background-task": "^0.2.8",
+    "expo-task-manager": "^13.1.6",
+    "react-native-background-job": "^2.3.1"
+  }
 }

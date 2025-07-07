@@ -14,6 +14,13 @@ export { NetMonitor } from "./netMonitor";
 export { QueueStorage } from "./queueStorage";
 export { RetryPolicies, RetryPolicy } from "./retryPolicy";
 
+export {
+  addBackgroundSyncToEngine,
+  BackgroundSyncManager,
+  createBackgroundSync,
+  type SyncEngineWithBackground,
+} from "./backgroundSync";
+
 export type {
   BackoffConfig,
   BatchSyncResult,
