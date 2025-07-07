@@ -121,15 +121,20 @@ yarn start
 ## 🛠️ Comandos Úteis
 
 - **Build da lib:**
+
   ```bash
   cd packages/sync-engine-lib
   yarn build
   ```
+
 - **Limpar cache do Expo:**
+
   ```bash
   npx expo start -c
   ```
+
 - **Reinstalar dependências:**
+
   ```bash
   yarn install
   ```

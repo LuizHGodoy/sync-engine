@@ -9,6 +9,14 @@ export interface QueueItem {
   updatedAt: number;
 }
 
+export interface BatchSyncResult {
+  success: boolean;
+  syncedItems: number;
+  errors: number;
+  totalProcessed: number;
+  duration: number;
+}
+
 export interface SyncConfig {
   serverUrl: string;
   batchSize: number;
@@ -18,6 +26,9 @@ export interface SyncConfig {
   backoffMultiplier: number;
   headers?: Record<string, string>;
   requestTimeout: number;
+  maxConcurrentRequests?: number;
+  enableBatchSync?: boolean;
+  cacheExpiration?: number;
 }
 
 export interface SyncStatus {

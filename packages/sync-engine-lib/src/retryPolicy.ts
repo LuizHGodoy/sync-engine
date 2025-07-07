@@ -43,7 +43,7 @@ export class RetryPolicy {
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
         if (attempt > 1) {
-          await this.wait(attempt - 1);
+          await this.waitWithJitter(attempt - 1, 0.1);
         }
 
         return await operation();
@@ -142,5 +142,21 @@ export const RetryPolicies = {
       multiplier: 2,
       maxDelay: 15000,
       maxRetries: 3,
+    }),
+
+  optimized: (): RetryPolicy =>
+    new RetryPolicy({
+      initialDelay: 500,
+      multiplier: 1.8,
+      maxDelay: 10000,
+      maxRetries: 4,
+    }),
+
+  circuitBreaker: (): RetryPolicy =>
+    new RetryPolicy({
+      initialDelay: 200,
+      multiplier: 1.5,
+      maxDelay: 5000,
+      maxRetries: 2,
     }),
 };

@@ -1,42 +1,61 @@
 export { SyncEngine } from "./syncEngine";
 
-export { QueueStorage } from "./queueStorage";
-export { NetMonitor } from "./netMonitor";
-export { RetryPolicy, RetryPolicies } from "./retryPolicy";
 export {
   ConflictResolver,
   ConflictStrategies,
   ConflictUtils,
 } from "./conflictResolver";
+export {
+  DEFAULT_SYNC_CONFIG,
+  getOptimizedConfig,
+  PERFORMANCE_PRESETS,
+} from "./defaults";
+export { NetMonitor } from "./netMonitor";
+export { QueueStorage } from "./queueStorage";
+export { RetryPolicies, RetryPolicy } from "./retryPolicy";
 
 export type {
-  QueueItem,
-  SyncConfig,
-  SyncStatus,
-  SyncEngineOptions,
-  SyncHooks,
-  ConflictResolutionStrategy,
-  ServerResponse,
   BackoffConfig,
-  SyncEventType,
+  BatchSyncResult,
+  ConflictResolutionStrategy,
+  QueueItem,
+  ServerResponse,
+  SyncConfig,
+  SyncEngineOptions,
   SyncEvent,
   SyncEventListener,
+  SyncEventType,
+  SyncHooks,
+  SyncStatus,
 } from "./types";
 
-import { SyncEngine } from "./syncEngine";
 import { ConflictStrategies } from "./conflictResolver";
+import { getOptimizedConfig } from "./defaults";
+import { SyncEngine } from "./syncEngine";
 import { SyncConfig, SyncEngineOptions } from "./types";
 
 export const SyncEngineUtils = {
   createDefaultConfig: (serverUrl: string): SyncConfig => ({
     serverUrl,
-    batchSize: 10,
+    batchSize: 25,
     syncInterval: 30000,
     maxRetries: 3,
     initialRetryDelay: 1000,
-    backoffMultiplier: 2,
-    requestTimeout: 10000,
+    backoffMultiplier: 1.8,
+    requestTimeout: 15000,
+    maxConcurrentRequests: 4,
+    enableBatchSync: true,
+    cacheExpiration: 30000,
   }),
+
+  createOptimizedConfig: (
+    serverUrl: string,
+    preset: "conservative" | "balanced" | "aggressive" | "realtime" = "balanced"
+  ): SyncConfig =>
+    ({
+      ...getOptimizedConfig(preset),
+      serverUrl,
+    } as SyncConfig),
 
   generateId: (): string => {
     return `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
