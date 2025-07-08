@@ -1,7 +1,7 @@
 import { AppState, AppStateStatus } from "react-native";
 import { ConflictResolver, ConflictStrategies } from "./conflictResolver";
 import { NetMonitor } from "./netMonitor";
-import { QueueStorage } from "./queueStorage";
+import { OutboxOperation, OutboxStatus, QueueStorage } from "./queueStorage";
 import { RetryPolicies, RetryPolicy } from "./retryPolicy";
 import {
   BatchSyncResult,
@@ -91,6 +91,61 @@ export class SyncEngine {
     this.bindMethods();
   }
 
+  private outboxToQueueItem(operation: OutboxOperation): QueueItem {
+    const status =
+      operation.status === "pending" || operation.status === "failed"
+        ? "pending"
+        : operation.status === "syncing"
+        ? "pending"
+        : operation.status === "synced"
+        ? "synced"
+        : "error";
+
+    return {
+      id: operation.id,
+      type: operation.entity_table,
+      payload: JSON.parse(operation.data || "{}"),
+      status,
+      retries: operation.retry_count,
+      lastTriedAt: operation.updated_at,
+      createdAt: operation.created_at,
+      updatedAt: operation.updated_at,
+    };
+  }
+
+  private queueItemToOutbox(
+    item: QueueItem,
+    entityId: string
+  ): {
+    entityTable: string;
+    entityId: string;
+    operation: "CREATE" | "UPDATE" | "DELETE";
+    data: any;
+  } {
+    const operation = item.payload._operation || "UPDATE";
+
+    return {
+      entityTable: item.type,
+      entityId,
+      operation,
+      data: item.payload,
+    };
+  }
+
+  private async updateOperationStatus(
+    operationId: string,
+    status: "synced" | "error",
+    errorMessage?: string
+  ): Promise<void> {
+    const outboxStatus: OutboxStatus =
+      status === "synced" ? "synced" : "failed";
+    await this.storage.updateOperationStatus(
+      operationId,
+      outboxStatus,
+      errorMessage
+    );
+  }
+
   async initialize(): Promise<void> {
     if (this.isInitialized) {
       return;
@@ -140,7 +195,9 @@ export class SyncEngine {
       );
       return [];
     }
-    return this.storage.getAllItems();
+
+    const operations = await this.storage.getPendingOperations();
+    return operations.map((op) => this.outboxToQueueItem(op));
   }
 
   stop(): void {
@@ -180,7 +237,11 @@ export class SyncEngine {
         updatedAt: Date.now(),
       };
 
-      await this.storage.addItem(item);
+      const { entityTable, entityId, operation, data } = this.queueItemToOutbox(
+        item,
+        id
+      );
+      await this.storage.addOperation(entityTable, entityId, operation, data);
 
       if (status === "pending") {
         this.memoryCache.pendingItems.set(id, item);
@@ -321,7 +382,8 @@ export class SyncEngine {
       }
     }
 
-    const items = await this.storage.getPendingItems(limit);
+    const operations = await this.storage.getPendingOperations(limit);
+    const items = operations.map((op) => this.outboxToQueueItem(op));
     this.updatePendingCache(items);
     return items;
   }
@@ -375,13 +437,17 @@ export class SyncEngine {
 
       for (const itemResult of result.results || []) {
         if (itemResult.success) {
-          await this.storage.updateItemStatus(itemResult.id, "synced");
+          await this.updateOperationStatus(itemResult.id, "synced");
           syncedItems++;
           this.emitEvent("item_synced", {
             item: items.find((i) => i.id === itemResult.id),
           });
         } else {
-          await this.storage.updateItemStatus(itemResult.id, "error", true);
+          await this.updateOperationStatus(
+            itemResult.id,
+            "error",
+            itemResult.error
+          );
           errors++;
           this.emitEvent("item_failed", {
             item: items.find((i) => i.id === itemResult.id),
@@ -391,7 +457,7 @@ export class SyncEngine {
       }
     } catch (error) {
       for (const item of items) {
-        await this.storage.updateItemStatus(item.id, "error", true);
+        await this.updateOperationStatus(item.id, "error", error?.toString());
         errors++;
         this.emitEvent("item_failed", { item, error });
       }
@@ -512,14 +578,22 @@ export class SyncEngine {
     }
 
     const stats = await this.storage.getQueueStats();
-    this.memoryCache.stats = stats;
+
+    const mappedStats = {
+      pending: stats.pending,
+      synced: stats.synced,
+      error: stats.failed,
+      total: stats.pending + stats.syncing + stats.failed + stats.synced,
+    };
+
+    this.memoryCache.stats = mappedStats;
     this.memoryCache.lastStatsUpdate = now;
 
     return {
       isActive: this.isActive,
       lastSync: this.lastSync,
-      pendingItems: stats.pending,
-      errorItems: stats.error,
+      pendingItems: mappedStats.pending,
+      errorItems: mappedStats.error,
       isOnline: this.netMonitor.getConnectionStatus(),
       isSyncing: this.isSyncing,
     };
@@ -534,7 +608,8 @@ export class SyncEngine {
       return Array.from(this.memoryCache.pendingItems.values());
     }
 
-    return this.storage.getAllItems();
+    const operations = await this.storage.getPendingOperations();
+    return operations.map((op) => this.outboxToQueueItem(op));
   }
 
   addEventListener(listener: SyncEventListener, eventTypes?: string[]): void {
@@ -573,18 +648,13 @@ export class SyncEngine {
   }
 
   async clearSyncedItems(): Promise<void> {
-    await this.storage.removeSyncedItems();
+    await this.storage.cleanupSyncedOperations(0);
     this.log("Items sincronizados removidos");
   }
 
   async retryFailedItems(): Promise<void> {
-    const errorItems = await this.storage.getErrorItems();
-
-    for (const item of errorItems) {
-      await this.storage.updateItemStatus(item.id, "pending");
-    }
-
-    this.log(`${errorItems.length} items com erro foram marcados para retry`);
+    const failedCount = await this.storage.resetFailedOperations();
+    this.log(`${failedCount} items com erro foram marcados para retry`);
 
     if (this.isActive && this.netMonitor.getConnectionStatus()) {
       await this.forceSync();
@@ -621,7 +691,7 @@ export class SyncEngine {
         const response = await this.sendToServer(item);
 
         if (response.success) {
-          await this.storage.updateItemStatus(item.id, "synced");
+          await this.updateOperationStatus(item.id, "synced");
         } else if (response.conflicts && response.conflicts.length > 0) {
           const conflict = response.conflicts[0];
           const resolvedItem = await this.conflictResolver.resolve(
@@ -629,20 +699,22 @@ export class SyncEngine {
             conflict.serverData
           );
 
-          await this.storage.removeItem(item.id);
-          await this.storage.addItem({
-            id: resolvedItem.id,
-            type: resolvedItem.type,
-            payload: resolvedItem.payload,
-            status: "pending",
-          });
+          await this.storage.removeOperation(item.id);
+          const { entityTable, entityId, operation, data } =
+            this.queueItemToOutbox(resolvedItem, resolvedItem.id);
+          await this.storage.addOperation(
+            entityTable,
+            entityId,
+            operation,
+            data
+          );
         } else {
           throw new Error(response.error || "Erro desconhecido no servidor");
         }
       },
       (attempt, error) => {
         this.log(`Retry ${attempt} para item ${item.id}:`, error.message);
-        this.storage.updateItemStatus(item.id, "error", true);
+        this.updateOperationStatus(item.id, "error", error.message);
       }
     );
   }

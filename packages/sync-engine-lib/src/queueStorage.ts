@@ -1,399 +1,413 @@
 import * as SQLite from "expo-sqlite";
-import { QueueItem } from "./types";
 
-interface PreparedStatements {
-  insertItem?: SQLite.SQLiteStatement;
-  updateStatus?: SQLite.SQLiteStatement;
-  deleteItem?: SQLite.SQLiteStatement;
-  selectPending?: SQLite.SQLiteStatement;
-  selectStats?: SQLite.SQLiteStatement;
+export type EntityStatus =
+  | "new"
+  | "pending"
+  | "syncing"
+  | "synced"
+  | "conflict"
+  | "failed";
+export type OperationType = "CREATE" | "UPDATE" | "DELETE";
+export type OutboxStatus = "pending" | "syncing" | "synced" | "failed";
+
+export interface OutboxOperation {
+  id: string;
+  entity_table: string;
+  entity_id: string;
+  operation: OperationType;
+  data: string;
+  status: OutboxStatus;
+  error_message?: string;
+  retry_count: number;
+  max_retries: number;
+  next_retry_at?: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface EntityMetadata {
+  _status: EntityStatus;
+  _server_id?: string;
+  _version: number;
+  _created_at: number;
+  _updated_at: number;
+  _deleted_at?: number;
+}
+
+export interface QueueStorageConfig {
+  dbName?: string;
+  maxRetries?: number;
+  batchSize?: number;
 }
 
 export class QueueStorage {
   private db: SQLite.SQLiteDatabase | null = null;
   private readonly dbName: string;
-  private preparedStatements: PreparedStatements = {};
-  private batchOperationQueue: Array<() => Promise<void>> = [];
-  private batchTimer?: NodeJS.Timeout;
-  private readonly BATCH_DELAY = 50;
+  private readonly maxRetries: number;
+  private readonly batchSize: number;
+  private initialized = false;
 
-  constructor(dbName: string = "sync_engine.db") {
-    this.dbName = dbName;
+  constructor(config: QueueStorageConfig = {}) {
+    this.dbName = config.dbName || "offline_first.db";
+    this.maxRetries = config.maxRetries || 5;
+    this.batchSize = config.batchSize || 50;
   }
 
   async initialize(): Promise<void> {
+    if (this.initialized) return;
+
     try {
       this.db = await SQLite.openDatabaseAsync(this.dbName);
       await this.createTables();
-      await this.prepareTables();
+      await this.createIndexes();
+      this.initialized = true;
     } catch (error) {
-      throw new Error(`Erro ao inicializar banco de dados: ${error}`);
+      throw new Error(`Failed to initialize QueueStorage: ${error}`);
     }
   }
 
   private async createTables(): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+    if (!this.db) throw new Error("Database not initialized");
 
-    const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS sync_queue (
+    await this.db.execAsync(`
+      CREATE TABLE IF NOT EXISTS outbox (
         id TEXT PRIMARY KEY,
-        type TEXT NOT NULL,
-        payload TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        retries INTEGER NOT NULL DEFAULT 0,
-        lastTriedAt INTEGER,
-        createdAt INTEGER NOT NULL,
-        updatedAt INTEGER NOT NULL
+        entity_table TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        operation TEXT NOT NULL CHECK (operation IN ('CREATE', 'UPDATE', 'DELETE')),
+        data TEXT,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'syncing', 'synced', 'failed')),
+        error_message TEXT,
+        retry_count INTEGER NOT NULL DEFAULT 0,
+        max_retries INTEGER NOT NULL DEFAULT ${this.maxRetries},
+        next_retry_at INTEGER,
+        created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
       );
-    `;
-
-    const createIndexSQL = `
-      CREATE INDEX IF NOT EXISTS idx_sync_queue_status ON sync_queue(status);
-      CREATE INDEX IF NOT EXISTS idx_sync_queue_type ON sync_queue(type);
-      CREATE INDEX IF NOT EXISTS idx_sync_queue_created ON sync_queue(createdAt);
-      CREATE INDEX IF NOT EXISTS idx_sync_queue_status_created ON sync_queue(status, createdAt);
-    `;
-
-    await this.db.execAsync(createTableSQL);
-    await this.db.execAsync(createIndexSQL);
-  }
-
-  private async prepareTables(): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    this.preparedStatements.insertItem = await this.db.prepareAsync(`
-      INSERT OR REPLACE INTO sync_queue (id, type, payload, status, retries, lastTriedAt, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    this.preparedStatements.updateStatus = await this.db.prepareAsync(`
-      UPDATE sync_queue 
-      SET status = ?, updatedAt = ?, lastTriedAt = ?, retries = CASE WHEN ? THEN retries + 1 ELSE retries END
-      WHERE id = ?
-    `);
-
-    this.preparedStatements.deleteItem = await this.db.prepareAsync(`
-      DELETE FROM sync_queue WHERE id = ?
-    `);
-
-    this.preparedStatements.selectPending = await this.db.prepareAsync(`
-      SELECT * FROM sync_queue 
-      WHERE status = 'pending' 
-      ORDER BY createdAt ASC
-      LIMIT ?
-    `);
-
-    this.preparedStatements.selectStats = await this.db.prepareAsync(`
-      SELECT 
-        status,
-        COUNT(*) as count
-      FROM sync_queue 
-      GROUP BY status
+    await this.db.execAsync(`
+      CREATE TABLE IF NOT EXISTS entity_metadata (
+        table_name TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'pending', 'syncing', 'synced', 'conflict', 'failed')),
+        server_id TEXT,
+        version INTEGER NOT NULL DEFAULT 1,
+        created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+        deleted_at INTEGER,
+        PRIMARY KEY (table_name, entity_id)
+      );
     `);
   }
 
-  async addItem(
-    item: Omit<QueueItem, "retries" | "createdAt" | "updatedAt"> | QueueItem
+  private async createIndexes(): Promise<void> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    await this.db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_outbox_status ON outbox(status);
+      CREATE INDEX IF NOT EXISTS idx_outbox_retry ON outbox(next_retry_at) WHERE status = 'failed';
+      CREATE INDEX IF NOT EXISTS idx_outbox_entity ON outbox(entity_table, entity_id);
+      CREATE INDEX IF NOT EXISTS idx_metadata_status ON entity_metadata(status);
+      CREATE INDEX IF NOT EXISTS idx_metadata_table ON entity_metadata(table_name);
+    `);
+  }
+
+  async addOperation(
+    entityTable: string,
+    entityId: string,
+    operation: OperationType,
+    data?: any
+  ): Promise<string> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const operationId = `op_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    const now = Date.now();
+
+    await this.db.runAsync(
+      `INSERT INTO outbox (id, entity_table, entity_id, operation, data, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        operationId,
+        entityTable,
+        entityId,
+        operation,
+        JSON.stringify(data || {}),
+        now,
+        now,
+      ]
+    );
+
+    return operationId;
+  }
+
+  async getPendingOperations(
+    limit: number = this.batchSize
+  ): Promise<OutboxOperation[]> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const result = await this.db.getAllAsync<OutboxOperation>(
+      `SELECT * FROM outbox 
+       WHERE status = 'pending' OR (status = 'failed' AND next_retry_at <= ?)
+       ORDER BY created_at ASC 
+       LIMIT ?`,
+      [Date.now(), limit]
+    );
+
+    return result;
+  }
+
+  async updateOperationStatus(
+    operationId: string,
+    status: OutboxStatus,
+    errorMessage?: string
   ): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+    if (!this.db) throw new Error("Database not initialized");
 
     const now = Date.now();
-    const queueItem: QueueItem = {
-      retries: 0,
-      createdAt: now,
-      updatedAt: now,
-      ...item,
+
+    if (status === "failed") {
+      await this.db.runAsync(
+        `UPDATE outbox 
+         SET status = ?, error_message = ?, retry_count = retry_count + 1, 
+             next_retry_at = ?, updated_at = ?
+         WHERE id = ?`,
+        [
+          status,
+          errorMessage || null,
+          this.calculateNextRetry(),
+          now,
+          operationId,
+        ]
+      );
+    } else {
+      await this.db.runAsync(
+        `UPDATE outbox 
+         SET status = ?, error_message = ?, updated_at = ?
+         WHERE id = ?`,
+        [status, errorMessage || null, now, operationId]
+      );
+    }
+  }
+
+  async removeOperation(operationId: string): Promise<void> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    await this.db.runAsync(`DELETE FROM outbox WHERE id = ?`, [operationId]);
+  }
+
+  async batchUpdateOperations(
+    updates: Array<{
+      id: string;
+      status: OutboxStatus;
+      errorMessage?: string;
+    }>
+  ): Promise<void> {
+    if (!this.db || updates.length === 0) return;
+
+    await this.db.withTransactionAsync(async () => {
+      for (const update of updates) {
+        await this.updateOperationStatus(
+          update.id,
+          update.status,
+          update.errorMessage
+        );
+      }
+    });
+  }
+
+  async setEntityMetadata(
+    tableName: string,
+    entityId: string,
+    metadata: Partial<EntityMetadata>
+  ): Promise<void> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const now = Date.now();
+
+    await this.db.runAsync(
+      `INSERT OR REPLACE INTO entity_metadata 
+       (table_name, entity_id, status, server_id, version, created_at, updated_at, deleted_at)
+       VALUES (?, ?, ?, ?, ?, 
+               COALESCE((SELECT created_at FROM entity_metadata WHERE table_name = ? AND entity_id = ?), ?),
+               ?, ?)`,
+      [
+        tableName,
+        entityId,
+        metadata._status || "new",
+        metadata._server_id || null,
+        metadata._version || 1,
+        tableName,
+        entityId,
+        metadata._created_at || now,
+        metadata._updated_at || now,
+        metadata._deleted_at || null,
+      ]
+    );
+  }
+
+  async getEntityMetadata(
+    tableName: string,
+    entityId: string
+  ): Promise<EntityMetadata | null> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const result = await this.db.getFirstAsync<{
+      status: EntityStatus;
+      server_id?: string;
+      version: number;
+      created_at: number;
+      updated_at: number;
+      deleted_at?: number;
+    }>(
+      `SELECT status, server_id, version, created_at, updated_at, deleted_at 
+       FROM entity_metadata 
+       WHERE table_name = ? AND entity_id = ?`,
+      [tableName, entityId]
+    );
+
+    if (!result) return null;
+
+    return {
+      _status: result.status,
+      _server_id: result.server_id,
+      _version: result.version,
+      _created_at: result.created_at,
+      _updated_at: result.updated_at,
+      _deleted_at: result.deleted_at,
     };
-
-    if (this.preparedStatements.insertItem) {
-      await this.preparedStatements.insertItem.executeAsync([
-        queueItem.id,
-        queueItem.type,
-        JSON.stringify(queueItem.payload),
-        queueItem.status,
-        queueItem.retries,
-        queueItem.lastTriedAt || null,
-        queueItem.createdAt,
-        queueItem.updatedAt,
-      ]);
-    } else {
-      const insertSQL = `
-        INSERT OR REPLACE INTO sync_queue (id, type, payload, status, retries, lastTriedAt, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      await this.db.runAsync(insertSQL, [
-        queueItem.id,
-        queueItem.type,
-        JSON.stringify(queueItem.payload),
-        queueItem.status,
-        queueItem.retries,
-        queueItem.lastTriedAt || null,
-        queueItem.createdAt,
-        queueItem.updatedAt,
-      ]);
-    }
   }
 
-  async addItems(
-    items: Array<
-      Omit<QueueItem, "retries" | "createdAt" | "updatedAt"> | QueueItem
-    >
+  async updateEntityStatus(
+    tableName: string,
+    entityId: string,
+    status: EntityStatus,
+    serverId?: string
   ): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    await this.db.withTransactionAsync(async () => {
-      for (const item of items) {
-        await this.addItem(item);
-      }
-    });
-  }
-
-  async getItemsByStatus(
-    status: QueueItem["status"],
-    limit?: number
-  ): Promise<QueueItem[]> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    let query = `
-      SELECT * FROM sync_queue 
-      WHERE status = ? 
-      ORDER BY createdAt ASC
-    `;
-
-    const params: any[] = [status];
-
-    if (limit && limit > 0) {
-      query += " LIMIT ?";
-      params.push(limit);
-    }
-
-    const result = await this.db.getAllAsync(query, params);
-    return result.map(this.mapRowToQueueItem);
-  }
-
-  async getPendingItems(limit?: number): Promise<QueueItem[]> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    if (this.preparedStatements.selectPending && limit) {
-      const result = await this.preparedStatements.selectPending.executeAsync([
-        limit,
-      ]);
-      const rows = await result.getAllAsync();
-      return rows.map(this.mapRowToQueueItem);
-    }
-
-    let query = `
-      SELECT * FROM sync_queue 
-      WHERE status = 'pending' 
-      ORDER BY createdAt ASC
-    `;
-
-    const params: any[] = [];
-
-    if (limit && limit > 0) {
-      query += " LIMIT ?";
-      params.push(limit);
-    }
-
-    const result = await this.db.getAllAsync(query, params);
-    return result.map(this.mapRowToQueueItem);
-  }
-
-  async getErrorItems(limit?: number): Promise<QueueItem[]> {
-    return this.getItemsByStatus("error", limit);
-  }
-
-  async updateItemStatus(
-    id: string,
-    status: QueueItem["status"],
-    incrementRetries: boolean = false
-  ): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+    if (!this.db) throw new Error("Database not initialized");
 
     const now = Date.now();
 
-    if (this.preparedStatements.updateStatus) {
-      await this.preparedStatements.updateStatus.executeAsync([
-        status,
-        now,
-        now,
-        incrementRetries,
-        id,
-      ]);
-    } else {
-      let updateSQL = `
-        UPDATE sync_queue 
-        SET status = ?, updatedAt = ?, lastTriedAt = ?
-      `;
-      const params: any[] = [status, now, now];
-
-      if (incrementRetries) {
-        updateSQL += ", retries = retries + 1";
-      }
-
-      updateSQL += " WHERE id = ?";
-      params.push(id);
-
-      await this.db.runAsync(updateSQL, params);
-    }
-  }
-
-  async updateItemsStatus(
-    ids: string[],
-    status: QueueItem["status"],
-    incrementRetries: boolean = false
-  ): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    await this.db.withTransactionAsync(async () => {
-      for (const id of ids) {
-        await this.updateItemStatus(id, status, incrementRetries);
-      }
-    });
-  }
-
-  async removeItem(id: string): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    const deleteSQL = "DELETE FROM sync_queue WHERE id = ?";
-    await this.db.runAsync(deleteSQL, [id]);
-  }
-
-  async removeSyncedItems(): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-
-    const deleteSQL = "DELETE FROM sync_queue WHERE status = ?";
-    await this.db.runAsync(deleteSQL, ["synced"]);
+    await this.db.runAsync(
+      `UPDATE entity_metadata 
+       SET status = ?, server_id = COALESCE(?, server_id), updated_at = ?
+       WHERE table_name = ? AND entity_id = ?`,
+      [status, serverId || null, now, tableName, entityId]
+    );
   }
 
   async getQueueStats(): Promise<{
     pending: number;
+    syncing: number;
+    failed: number;
     synced: number;
-    error: number;
-    total: number;
   }> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+    if (!this.db) throw new Error("Database not initialized");
 
-    if (this.preparedStatements.selectStats) {
-      const result = await this.preparedStatements.selectStats.executeAsync();
-      const rows = await result.getAllAsync();
+    const result = await this.db.getFirstAsync<{
+      pending: number;
+      syncing: number;
+      failed: number;
+      synced: number;
+    }>(
+      `SELECT 
+         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+         SUM(CASE WHEN status = 'syncing' THEN 1 ELSE 0 END) as syncing,
+         SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+         SUM(CASE WHEN status = 'synced' THEN 1 ELSE 0 END) as synced
+       FROM outbox`
+    );
 
-      const stats = {
+    return result || { pending: 0, syncing: 0, failed: 0, synced: 0 };
+  }
+
+  async getEntityStats(tableName?: string): Promise<{
+    new: number;
+    pending: number;
+    syncing: number;
+    synced: number;
+    conflict: number;
+    failed: number;
+  }> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    const whereClause = tableName ? "WHERE table_name = ?" : "";
+    const params = tableName ? [tableName] : [];
+
+    const result = await this.db.getFirstAsync<{
+      new: number;
+      pending: number;
+      syncing: number;
+      synced: number;
+      conflict: number;
+      failed: number;
+    }>(
+      `SELECT 
+         SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new,
+         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+         SUM(CASE WHEN status = 'syncing' THEN 1 ELSE 0 END) as syncing,
+         SUM(CASE WHEN status = 'synced' THEN 1 ELSE 0 END) as synced,
+         SUM(CASE WHEN status = 'conflict' THEN 1 ELSE 0 END) as conflict,
+         SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
+       FROM entity_metadata ${whereClause}`,
+      params
+    );
+
+    return (
+      result || {
+        new: 0,
         pending: 0,
+        syncing: 0,
         synced: 0,
-        error: 0,
-        total: 0,
-      };
-
-      for (const row of rows) {
-        const status = (row as any).status;
-        const count = (row as any).count;
-        stats[status as keyof typeof stats] = count;
-        stats.total += count;
+        conflict: 0,
+        failed: 0,
       }
-
-      return stats;
-    }
-
-    const statsSQL = `
-      SELECT 
-        status,
-        COUNT(*) as count
-      FROM sync_queue 
-      GROUP BY status
-    `;
-
-    const result = await this.db.getAllAsync(statsSQL);
-
-    const stats = {
-      pending: 0,
-      synced: 0,
-      error: 0,
-      total: 0,
-    };
-
-    for (const row of result) {
-      const status = (row as any).status;
-      const count = (row as any).count;
-      stats[status as keyof typeof stats] = count;
-      stats.total += count;
-    }
-
-    return stats;
+    );
   }
 
-  async getItem(id: string): Promise<QueueItem | null> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+  async cleanupSyncedOperations(olderThanDays: number = 7): Promise<number> {
+    if (!this.db) throw new Error("Database not initialized");
 
-    const selectSQL = "SELECT * FROM sync_queue WHERE id = ?";
-    const result = await this.db.getFirstAsync(selectSQL, [id]);
+    const cutoffTime = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
 
-    if (!result) return null;
+    const result = await this.db.runAsync(
+      `DELETE FROM outbox 
+       WHERE status = 'synced' AND updated_at < ?`,
+      [cutoffTime]
+    );
 
-    return this.mapRowToQueueItem(result);
+    return result.changes;
   }
 
-  async clearQueue(): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+  async resetFailedOperations(): Promise<number> {
+    if (!this.db) throw new Error("Database not initialized");
 
-    const deleteSQL = "DELETE FROM sync_queue";
-    await this.db.runAsync(deleteSQL);
+    const result = await this.db.runAsync(
+      `UPDATE outbox 
+       SET status = 'pending', retry_count = 0, next_retry_at = NULL, error_message = NULL
+       WHERE status = 'failed'`
+    );
+
+    return result.changes;
   }
 
-  async transaction(callback: () => Promise<void>): Promise<void> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
+  private calculateNextRetry(retryCount: number = 0): number {
+    const baseDelay = 1000;
+    const maxDelay = 300000;
+    const delay = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay);
 
-    await this.db.withTransactionAsync(callback);
-  }
+    const jitter = delay * 0.1 * (Math.random() * 2 - 1);
 
-  private mapRowToQueueItem(row: any): QueueItem {
-    return {
-      id: row.id,
-      type: row.type,
-      payload: JSON.parse(row.payload),
-      status: row.status,
-      retries: row.retries,
-      lastTriedAt: row.lastTriedAt,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
-  }
-
-  public async getAllItems(): Promise<QueueItem[]> {
-    if (!this.db) throw new Error("Banco de dados não inicializado");
-    const selectSQL = "SELECT * FROM sync_queue ORDER BY createdAt DESC";
-    const result = await this.db.getAllAsync(selectSQL);
-    return result.map(this.mapRowToQueueItem);
+    return Date.now() + delay + jitter;
   }
 
   async close(): Promise<void> {
-    if (this.preparedStatements.insertItem) {
-      await this.preparedStatements.insertItem.finalizeAsync();
-    }
-    if (this.preparedStatements.updateStatus) {
-      await this.preparedStatements.updateStatus.finalizeAsync();
-    }
-    if (this.preparedStatements.deleteItem) {
-      await this.preparedStatements.deleteItem.finalizeAsync();
-    }
-    if (this.preparedStatements.selectPending) {
-      await this.preparedStatements.selectPending.finalizeAsync();
-    }
-    if (this.preparedStatements.selectStats) {
-      await this.preparedStatements.selectStats.finalizeAsync();
-    }
-
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-    }
-    this.batchOperationQueue = [];
-
     if (this.db) {
       await this.db.closeAsync();
       this.db = null;
+      this.initialized = false;
     }
-
-    this.preparedStatements = {};
   }
 }

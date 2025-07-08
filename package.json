@@ -5,6 +5,15 @@
     "apps/*",
     "docs"
   ],
+  "scripts": {
+    "demo:server": "cd apps/demo-server && yarn start",
+    "demo:app": "cd apps/demo-app && yarn start",
+    "demo": "concurrently \"yarn run demo:server\" \"yarn run demo:app\"",
+    "build:lib": "cd packages/sync-engine-lib && yarn build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
   "dependencies": {
     "@react-native-community/netinfo": "^11.4.1",
     "expo-sqlite": "^15.2.13"

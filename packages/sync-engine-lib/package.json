@@ -9,7 +9,7 @@
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "prepare": "npm run build"
+    "prepare": "yarn run build"
   },
   "keywords": [
     "react-native",

@@ -1,6 +1,6 @@
-import express from "express";
-import cors from "cors";
 import bodyParser from "body-parser";
+import cors from "cors";
+import express from "express";
 
 const app = express();
 const port = 4000;
@@ -18,7 +18,9 @@ function mergeTodo(local, remote) {
 }
 
 app.post("/sync", (req, res) => {
-  const { data } = req.body;
+  const { data, lastSync } = req.body;
+  const serverTimestamp = Date.now();
+
   if (Array.isArray(data)) {
     data.forEach((item) => {
       const idx = todos.findIndex((t) => t.id === item.id);
@@ -29,10 +31,16 @@ app.post("/sync", (req, res) => {
       }
     });
   }
+
+  const changes = lastSync
+    ? todos.filter((t) => t.updatedAt > lastSync)
+    : todos;
+
   res.json({
     success: true,
-    data: todos,
+    data: changes,
     conflicts: [],
+    serverTimestamp,
   });
 });
 

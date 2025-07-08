@@ -1,5 +1,10 @@
 export { SyncEngine } from "./syncEngine";
 
+export * from "./adapters";
+export { BackgroundSyncWorker } from "./backgroundSyncWorker";
+export { createEntityDB, OfflineFirstDB } from "./offlineFirstDB";
+export { OfflineFirstEngine } from "./offlineFirstEngine";
+
 export {
   ConflictResolver,
   ConflictStrategies,
@@ -35,6 +40,31 @@ export type {
   SyncHooks,
   SyncStatus,
 } from "./types";
+
+export type {
+  EntityMetadata,
+  EntityStatus,
+  OutboxOperation,
+  OutboxStatus,
+  QueueStorageConfig,
+} from "./queueStorage";
+
+export type {
+  EntityConfig,
+  EntitySchema,
+  EntityWithMetadata,
+  OfflineFirstDBConfig,
+} from "./offlineFirstDB";
+
+export type {
+  BackgroundSyncConfig,
+  SyncWorkerEvent,
+  SyncWorkerEventListener,
+  SyncWorkerEventType,
+  SyncWorkerStats,
+} from "./backgroundSyncWorker";
+
+export type { OfflineFirstEngineConfig } from "./offlineFirstEngine";
 
 import { ConflictStrategies } from "./conflictResolver";
 import { getOptimizedConfig } from "./defaults";
