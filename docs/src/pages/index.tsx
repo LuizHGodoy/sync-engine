@@ -66,7 +66,7 @@ function Hero() {
         <div className={styles.buttons}>
           <Link
             className={clsx("button button--lg", styles["button--highlight"])}
-            to="/docs/intro"
+            to="/docs/introducao/visao-geral"
           >
             Ver documentação 📚
           </Link>
