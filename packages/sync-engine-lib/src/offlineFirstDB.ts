@@ -229,7 +229,7 @@ export class OfflineFirstDB {
     return results.map((row) => this.deserializeEntity(row));
   }
 
-  async findById<T extends Record<string, any>>(
+  async findById(
     entityName: string,
     id: string
   ): Promise<EntityWithMetadata | null> {
@@ -455,7 +455,7 @@ export function createEntityDB<T extends Record<string, any>>(
     },
 
     async findById(id: string): Promise<EntityWithMetadata | null> {
-      return db.findById<T>(entityName, id);
+      return db.findById(entityName, id);
     },
 
     async update(

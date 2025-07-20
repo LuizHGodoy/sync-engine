@@ -28,7 +28,9 @@ class ExpoBackgroundTaskManager implements BackgroundTaskManager {
 
   async isSupported(): Promise<boolean> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       this.BackgroundTask = require("expo-background-task").default;
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       this.TaskManager = require("expo-task-manager").default;
       return true;
     } catch {
@@ -75,7 +77,7 @@ class RNBackgroundJobManager implements BackgroundTaskManager {
 
   async isSupported(): Promise<boolean> {
     try {
-      this.BackgroundJob = require("react-native-background-job").default;
+      this.BackgroundJob = require("react-native-background-job").default; // eslint-disable-line @typescript-eslint/no-var-requires
       return true;
     } catch {
       return false;
