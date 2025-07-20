@@ -6,10 +6,17 @@
     "docs"
   ],
   "scripts": {
-    "demo:server": "cd apps/demo-server && yarn start",
-    "demo:app": "cd apps/demo-app && yarn start",
+    "demo:server": "yarn workspace demo-server start",
+    "demo:app": "yarn workspace demo-app start",
     "demo": "concurrently \"yarn run demo:server\" \"yarn run demo:app\"",
-    "build:lib": "cd packages/sync-engine-lib && yarn build"
+    "build:lib": "yarn workspace sync-engine-lib build",
+    "test:lib": "yarn workspace sync-engine-lib test",
+    "lint:lib": "yarn workspace sync-engine-lib lint",
+    "build": "yarn workspace sync-engine-lib build",
+    "test": "yarn workspace sync-engine-lib test",
+    "lint": "yarn workspace sync-engine-lib lint",
+    "clean": "yarn workspaces foreach -A run clean",
+    "install:all": "yarn install --frozen-lockfile"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

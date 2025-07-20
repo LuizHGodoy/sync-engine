@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "yarn"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn workspace sync-engine-lib test
+
+      - name: Build library
+        run: yarn workspace sync-engine-lib build
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4.0.1
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Changes in this Release
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Installation
+            ```bash
+            npm install sync-engine-lib@${{ steps.get_version.outputs.VERSION }}
+            # or
+            yarn add sync-engine-lib@${{ steps.get_version.outputs.VERSION }}
+            ```
+
+            ## Documentation
+            - [README](https://github.com/${{ github.repository }}/blob/v${{ steps.get_version.outputs.VERSION }}/README.md)
+            - [API Documentation](https://github.com/${{ github.repository }}/blob/v${{ steps.get_version.outputs.VERSION }}/docs/)
+
+            ## Breaking Changes
+            <!-- List any breaking changes if this is a major version -->
+
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-') }}
+
+      - name: Publish to NPM
+        run: yarn workspace sync-engine-lib npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: release
+    if: success()
+
+    steps:
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Notify Discord (if configured)
+        # Add Discord webhook notification if desired
+        run: |
+          echo "Released version ${{ steps.get_version.outputs.VERSION }}"
+          # curl -X POST ${{ secrets.DISCORD_WEBHOOK }} -d "..."

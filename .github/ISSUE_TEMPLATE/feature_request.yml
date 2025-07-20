@@ -1,0 +1,195 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide detailed information to help us understand and evaluate your request.
+
+  - type: checkboxes
+    id: existing-features
+    attributes:
+      label: Existing Features
+      description: Please check existing features and issues
+      options:
+        - label: I have searched existing issues and this feature doesn't exist
+          required: true
+        - label: I have checked the documentation for existing solutions
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: |
+        Describe the problem or limitation you're facing...
+
+        For example:
+        - As a developer, I need to...
+        - Currently, it's difficult to...
+        - There's no way to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your ideal solution for this problem
+      placeholder: |
+        Describe what you'd like to happen...
+
+        For example:
+        - Add a new method that...
+        - Extend the existing API to...
+        - Create a new configuration option for...
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: API Design (if applicable)
+      description: If this involves API changes, show what the API might look like
+      placeholder: |
+        ```typescript
+        // Example API design
+        const syncEngine = new SyncEngine({
+          // new configuration option
+          newFeature: {
+            enabled: true,
+            options: {...}
+          }
+        });
+
+        // or new method
+        await syncEngine.newMethod(params);
+        ```
+      render: typescript
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the system would this feature affect?
+      options:
+        - SyncEngine core
+        - Queue management
+        - Conflict resolution
+        - Network monitoring
+        - Background sync
+        - Configuration
+        - Documentation
+        - Developer experience
+        - Performance
+        - Testing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: What alternatives have you considered?
+      placeholder: |
+        Describe alternative solutions you've considered...
+
+        For example:
+        - Using third-party library X, but...
+        - Implementing a workaround with...
+        - Manual approach, but it's not scalable because...
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific examples of how this feature would be used
+      placeholder: |
+        Example use cases:
+
+        1. **E-commerce app**: Need to sync product catalogs with...
+        2. **Social media app**: Want to synchronize user posts when...
+        3. **Note-taking app**: Require conflict resolution for...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibility Considerations
+      description: Check all that apply
+      options:
+        - label: This is a breaking change
+        - label: This requires new peer dependencies
+        - label: This affects existing APIs
+        - label: This impacts performance
+        - label: This requires documentation updates
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve workflow significantly
+        - High - Essential for project success
+        - Critical - Blocking current development
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected Impact
+      description: How would this feature benefit the community?
+      placeholder: |
+        Describe the expected impact...
+
+        For example:
+        - Reduces development time by...
+        - Enables new use cases like...
+        - Improves performance by...
+        - Makes the library more accessible to...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: Do you have ideas about how this could be implemented?
+      placeholder: |
+        Share any implementation thoughts...
+
+        For example:
+        - Could extend the existing X class
+        - Might need a new Y interface
+        - Could leverage Z pattern
+        - May require changes to database schema
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to help implement this feature?
+      options:
+        - label: I'm willing to submit a PR for this feature
+        - label: I can help with design discussions
+        - label: I can help with testing
+        - label: I can help with documentation
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples
+      placeholder: |
+        Any additional information that would help understand this request...
+
+        - Links to related projects
+        - Screenshots or mockups
+        - Research or benchmarks
+        - Timeline requirements
