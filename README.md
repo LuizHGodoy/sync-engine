@@ -1,31 +1,31 @@
 # Sync Engine Monorepo
 
-Este repositório contém uma solução completa para sincronização bidirecional offline-first em React Native/Expo, incluindo:
+This repository contains a complete solution for offline-first bidirectional synchronization in React Native/Expo, including:
 
-- **`packages/sync-engine-lib`**: Biblioteca TypeScript para sincronização offline/online com SQLite e autosync.
-- **`apps/demo-app`**: App Expo demonstrando o uso da lib em um Todo List offline-first.
-- **`apps/demo-server`**: Servidor Express para simular backend e testar o fluxo de sync.
+- **`packages/sync-engine-lib`**: TypeScript library for offline/online synchronization with SQLite and autosync.
+- **`apps/demo-app`**: Expo app demonstrating library usage with an offline-first Todo List.
+- **`apps/demo-server`**: Express server for simulating backend and testing sync flow.
 
 ---
 
-## 🚀 Visão Geral
+## 🚀 Overview
 
-- Sincronização bidirecional: app <-> servidor
-- Funciona 100% offline: todas as operações são salvas localmente e sincronizadas quando a conexão volta
-- Resolução de conflitos, retry automático, fila persistente (SQLite)
-- Pronto para React Native/Expo SDK 53+
+- Bidirectional synchronization: app <-> server
+- 100% offline functionality: all operations are saved locally and synchronized when connection returns
+- Conflict resolution, automatic retry, persistent queue (SQLite)
+- Ready for React Native/Expo SDK 53+
 
 ---
 
 ## 📦 Sync Engine Lib
 
-Biblioteca TypeScript para sincronização bidirecional offline-first.
+TypeScript library for offline-first bidirectional synchronization.
 
-### Instalação
+### Installation
 
 ```bash
 yarn add sync-engine-lib
-# ou
+# or
 npm install sync-engine-lib
 ```
 
@@ -35,7 +35,7 @@ npm install sync-engine-lib
 yarn add expo-sqlite @react-native-community/netinfo
 ```
 
-### Uso Básico
+### Basic Usage
 
 ```typescript
 import { SyncEngineFactory } from "sync-engine-lib";
@@ -46,38 +46,38 @@ const syncEngine = SyncEngineFactory.createForDevelopment(
 await syncEngine.initialize();
 await syncEngine.start();
 
-// Adiciona item à fila (offline ou online)
+// Adds item to queue (offline or online)
 await syncEngine.addToQueue(SyncEngineUtils.generateId(), "todo", {
-  text: "Minha tarefa",
+  text: "My task",
   done: false,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 });
 ```
 
-### Fluxo Offline-First
+### Offline-First Flow
 
-- **Online:** O app sincroniza automaticamente com o servidor.
-- **Offline:** Todas as operações são salvas localmente (SQLite). Nenhuma requisição é feita ao servidor.
-- **Quando volta a ficar online:** A SyncEngine envia tudo que estava pendente para o servidor.
+- **Online:** The app automatically synchronizes with the server.
+- **Offline:** All operations are saved locally (SQLite). No requests are made to the server.
+- **When back online:** SyncEngine sends everything that was pending to the server.
 
-Você pode forçar o modo offline/online para testes:
+You can force offline/online mode for testing:
 
 ```typescript
-syncEngine.setForcedOnline(false); // Força modo offline
-syncEngine.setForcedOnline(true); // Força modo online
-syncEngine.setForcedOnline(null); // Volta ao modo automático
+syncEngine.setForcedOnline(false); // Force offline mode
+syncEngine.setForcedOnline(true); // Force online mode
+syncEngine.setForcedOnline(null); // Return to automatic mode
 ```
 
 ---
 
 ## 📱 Demo App (Expo)
 
-App de Todo List demonstrando o uso da Sync Engine.
+Todo List app demonstrating Sync Engine usage.
 
-![Demo do app offline-first](apps/demo-app/assets/images/tela-demo.png)
+![Offline-first app demo](apps/demo-app/assets/images/tela-demo.png)
 
-### Rodando o app
+### Running the app
 
 ```bash
 cd apps/demo-app
@@ -85,17 +85,17 @@ yarn install
 npx expo start
 ```
 
-- O app funciona 100% offline-first.
-- Use o botão "Simular Offline" para testar o fluxo offline.
-- Crie, edite e delete tarefas mesmo sem internet. Ao voltar para online, tudo será sincronizado.
+- The app works 100% offline-first.
+- Use the "Simulate Offline" button to test offline flow.
+- Create, edit and delete tasks even without internet. When back online, everything will be synchronized.
 
 ---
 
 ## 🖥️ Demo Server
 
-Servidor Express simples para simular backend e testar a sincronização.
+Simple Express server for simulating backend and testing synchronization.
 
-### Rodando o servidor
+### Running the server
 
 ```bash
 cd apps/demo-server
@@ -103,37 +103,37 @@ yarn install
 yarn start
 ```
 
-- O servidor expõe `/sync` (POST) e `/todos` (GET)
-- Suporta soft delete, merge simples e atualização de tarefas
+- The server exposes `/sync` (POST) and `/todos` (GET)
+- Supports soft delete, simple merge and task updates
 
 ---
 
-## 🔄 Exemplo de Fluxo Completo
+## 🔄 Complete Flow Example
 
-1. Inicie o servidor: `cd apps/demo-server && yarn start`
-2. Inicie o app: `cd apps/demo-app && npx expo start`
-3. No app, adicione/edite/delete tarefas offline
-4. Volte para online: a SyncEngine sincroniza tudo automaticamente
-5. Veja o log de eventos no app e os dados atualizados no servidor
+1. Start the server: `cd apps/demo-server && yarn start`
+2. Start the app: `cd apps/demo-app && npx expo start`
+3. In the app, add/edit/delete tasks offline
+4. Go back online: SyncEngine synchronizes everything automatically
+5. See the event log in the app and updated data on the server
 
 ---
 
-## 🛠️ Comandos Úteis
+## 🛠️ Useful Commands
 
-- **Build da lib:**
+- **Build the lib:**
 
   ```bash
   cd packages/sync-engine-lib
   yarn build
   ```
 
-- **Limpar cache do Expo:**
+- **Clear Expo cache:**
 
   ```bash
   npx expo start -c
   ```
 
-- **Reinstalar dependências:**
+- **Reinstall dependencies:**
 
   ```bash
   yarn install
@@ -141,20 +141,20 @@ yarn start
 
 ---
 
-## 🤝 Contribuindo
+## 🤝 Contributing
 
-1. Fork o projeto
-2. Crie uma branch: `git checkout -b feature/nova-feature`
-3. Commit: `git commit -m 'feat: nova feature'`
-4. Push: `git push origin feature/nova-feature`
-5. Abra um Pull Request
+1. Fork the project
+2. Create a branch: `git checkout -b feature/new-feature`
+3. Commit: `git commit -m 'feat: new feature'`
+4. Push: `git push origin feature/new-feature`
+5. Open a Pull Request
 
 ---
 
-## 📄 Licença
+## 📄 License
 
 MIT
 
 ---
 
-Desenvolvido para React Native/Expo SDK 53+ com TypeScript, SQLite e NetInfo.
+Developed for React Native/Expo SDK 53+ with TypeScript, SQLite and NetInfo.

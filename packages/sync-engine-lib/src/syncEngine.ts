@@ -152,7 +152,7 @@ export class SyncEngine {
     }
 
     try {
-      this.log("Inicializando Sync Engine...");
+      this.log("Initializing Sync Engine...");
 
       await this.storage.initialize();
       await this.netMonitor.initialize();
@@ -161,9 +161,9 @@ export class SyncEngine {
       this.setupAppStateListener();
 
       this.isInitialized = true;
-      this.log("Sync Engine inicializada com sucesso");
+      this.log("Sync Engine initialized successfully");
     } catch (error) {
-      this.log("Erro ao inicializar Sync Engine:", error);
+      this.log("Error initializing Sync Engine:", error);
       throw error;
     }
   }
@@ -178,7 +178,7 @@ export class SyncEngine {
     }
 
     this.isActive = true;
-    this.log("Iniciando sincronização automática");
+    this.log("Starting automatic synchronization");
 
     if (this.netMonitor.getConnectionStatus()) {
       await this.forceSync();
@@ -191,7 +191,7 @@ export class SyncEngine {
   async getQueuedItems(): Promise<QueueItem[]> {
     if (!this.isInitialized) {
       this.log(
-        "Atenção: Sync Engine não inicializada. Retornando array vazio."
+        "Warning: Sync Engine not initialized. Returning empty array."
       );
       return [];
     }
@@ -206,7 +206,7 @@ export class SyncEngine {
     }
 
     this.isActive = false;
-    this.log("Parando sincronização automática");
+    this.log("Stopping automatic synchronization");
 
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -248,7 +248,7 @@ export class SyncEngine {
       }
       this.invalidateCache();
 
-      this.log(`Item adicionado à queue: ${id} (${type})`);
+      this.log(`Item added to queue: ${id} (${type})`);
       this.emitEvent("item_queued", { id, type, payload });
 
       await this.executeHook("onQueueChange", await this.getStatus());
@@ -261,7 +261,7 @@ export class SyncEngine {
         queueMicrotask(() => this.forceSync());
       }
     } catch (error) {
-      this.log("Erro ao adicionar item à queue:", error);
+      this.log("Error adding item to queue:", error);
       throw error;
     }
   }
@@ -272,7 +272,7 @@ export class SyncEngine {
     }
 
     if (this.isSyncing) {
-      this.log("Sync já em execução, aguardando...");
+      this.log("Sync already running, waiting...");
       await this.waitForSyncCompletion();
       return {
         success: true,
@@ -284,7 +284,7 @@ export class SyncEngine {
     }
 
     if (!this.netMonitor.getConnectionStatus()) {
-      this.log("Sem conexão, sync cancelado");
+      this.log("No connection, sync cancelled");
       return {
         success: false,
         syncedItems: 0,
@@ -301,7 +301,7 @@ export class SyncEngine {
     let totalProcessed = 0;
 
     try {
-      this.log("Iniciando sincronização forçada");
+      this.log("Starting forced synchronization");
       this.emitEvent("sync_started");
 
       const pendingItems = await this.getCachedPendingItems(
@@ -309,7 +309,7 @@ export class SyncEngine {
       );
 
       if (pendingItems.length === 0) {
-        this.log("Nenhum item pendente para sincronizar");
+        this.log("No pending items to sync");
         return {
           success: true,
           syncedItems: 0,
@@ -319,7 +319,7 @@ export class SyncEngine {
         };
       }
 
-      this.log(`Sincronizando ${pendingItems.length} items`);
+      this.log(`Synchronizing ${pendingItems.length} items`);
       await this.executeHook("onBeforeSync", pendingItems);
 
       if (this.config.enableBatchSync) {
@@ -341,7 +341,7 @@ export class SyncEngine {
 
       const duration = Date.now() - startTime;
       this.log(
-        `Sync completo: ${syncedItems} sincronizados, ${errors} erros em ${duration}ms`
+        `Sync complete: ${syncedItems} synced, ${errors} errors in ${duration}ms`
       );
 
       this.emitEvent("sync_completed", { syncedItems, errors, duration });
@@ -355,7 +355,7 @@ export class SyncEngine {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.log("Erro durante sincronização:", error);
+      this.log("Error during synchronization:", error);
       this.emitEvent("sync_failed", { error, duration });
       await this.executeHook("onSyncError", error, []);
       throw error;
@@ -510,7 +510,7 @@ export class SyncEngine {
         this.emitEvent("item_synced", { item });
       } catch (error) {
         errors++;
-        this.log(`Erro ao sincronizar item ${item.id}:`, error);
+        this.log(`Error syncing item ${item.id}:`, error);
         this.emitEvent("item_failed", { item, error });
       }
     }
@@ -649,12 +649,12 @@ export class SyncEngine {
 
   async clearSyncedItems(): Promise<void> {
     await this.storage.cleanupSyncedOperations(0);
-    this.log("Items sincronizados removidos");
+    this.log("Synced items removed");
   }
 
   async retryFailedItems(): Promise<void> {
     const failedCount = await this.storage.resetFailedOperations();
-    this.log(`${failedCount} items com erro foram marcados para retry`);
+    this.log(`${failedCount} failed items marked for retry`);
 
     if (this.isActive && this.netMonitor.getConnectionStatus()) {
       await this.forceSync();
@@ -709,11 +709,11 @@ export class SyncEngine {
             data
           );
         } else {
-          throw new Error(response.error || "Erro desconhecido no servidor");
+          throw new Error(response.error || "Unknown server error");
         }
       },
       (attempt, error) => {
-        this.log(`Retry ${attempt} para item ${item.id}:`, error.message);
+        this.log(`Retry ${attempt} for item ${item.id}:`, error.message);
         this.updateOperationStatus(item.id, "error", error.message);
       }
     );
@@ -811,7 +811,7 @@ export class SyncEngine {
       try {
         await hook(...args);
       } catch (error) {
-        this.log(`Erro ao executar hook ${hookName}:`, error);
+        this.log(`Error executing hook ${hookName}:`, error);
       }
     }
   }
@@ -830,7 +830,7 @@ export class SyncEngine {
         try {
           listener(event);
         } catch (error) {
-          this.log("Erro ao notificar listener específico:", error);
+          this.log("Error notifying specific listener:", error);
         }
       });
     }
@@ -840,7 +840,7 @@ export class SyncEngine {
         try {
           listener(event);
         } catch (error) {
-          this.log("Erro ao notificar listener global:", error);
+          this.log("Error notifying global listener:", error);
         }
       });
     }

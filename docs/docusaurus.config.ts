@@ -92,8 +92,8 @@ const config: Config = {
           title: "Docs",
           items: [
             {
-              label: "Tutorial",
-              to: "/docs/intro",
+              label: "Documentação",
+              to: "/docs/introducao/visao-geral",
             },
           ],
         },
@@ -118,12 +118,8 @@ const config: Config = {
           title: "More",
           items: [
             {
-              label: "Blog",
-              to: "/blog",
-            },
-            {
               label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
+              href: "https://github.com/LuizHGodoy/sync-engine",
             },
           ],
         },

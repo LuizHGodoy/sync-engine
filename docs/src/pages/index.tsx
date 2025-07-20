@@ -5,7 +5,7 @@ import Link from "@docusaurus/Link";
 import styles from "./index.module.css";
 
 function Logo() {
-  // Logo fictício, pode ser trocado depois
+  // Fictional logo, can be replaced later
   return (
     <svg
       width="64"
@@ -66,7 +66,7 @@ function Hero() {
         <div className={styles.buttons}>
           <Link
             className={clsx("button button--lg", styles["button--highlight"])}
-            to="/docs/intro"
+            to="/docs/introducao/visao-geral"
           >
             Ver documentação 📚
           </Link>
@@ -181,7 +181,7 @@ const syncEngine = SyncEngineFactory.createForDevelopment("http://localhost:4000
 await syncEngine.initialize();
 await syncEngine.start();
 
-// Adiciona item à fila (offline ou online)
+// Adds item to queue (offline or online)
 await syncEngine.addToQueue(
   SyncEngineUtils.generateId(),
   "todo",

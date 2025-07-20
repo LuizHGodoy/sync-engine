@@ -55,7 +55,7 @@ export class NetMonitor {
       try {
         listener(event);
       } catch (error) {
-        console.error("Erro ao notificar listener de conectividade:", error);
+        console.error("Error notifying connectivity listener:", error);
       }
     });
   }
@@ -72,7 +72,7 @@ export class NetMonitor {
 
       return isConnected;
     } catch (error) {
-      console.error("Erro ao verificar conectividade:", error);
+      console.error("Error checking connectivity:", error);
       return false;
     }
   }
@@ -117,7 +117,7 @@ export class NetMonitor {
         isInternetReachable: state.isInternetReachable,
       };
     } catch (error) {
-      console.error("Erro ao obter detalhes da conexão:", error);
+      console.error("Error getting connection details:", error);
       return {
         isConnected: false,
         type: "unknown",
