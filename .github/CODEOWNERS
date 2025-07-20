@@ -1,0 +1,22 @@
+# Global code owners
+* @LuizHGodoy
+
+# Core library code
+/packages/sync-engine-lib/ @LuizHGodoy
+
+# Documentation
+/README.md @LuizHGodoy
+/docs/ @LuizHGodoy
+/.github/ @LuizHGodoy
+
+# Configuration files
+/package.json @LuizHGodoy
+/yarn.lock @LuizHGodoy
+/tsconfig.json @LuizHGodoy
+
+# Demo applications
+/apps/ @LuizHGodoy
+
+# Security-related files
+/SECURITY.md @LuizHGodoy
+/.github/workflows/ @LuizHGodoy

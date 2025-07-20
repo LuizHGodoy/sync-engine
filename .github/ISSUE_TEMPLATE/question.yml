@@ -1,0 +1,187 @@
+name: Question / Support
+description: Ask a question about using Sync Engine
+title: "[Question]: "
+labels: ["question", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your question! Please provide as much detail as possible to help us give you the best answer.
+
+        **Note**: For general discussions, consider using [GitHub Discussions](../../discussions) instead.
+
+  - type: checkboxes
+    id: research
+    attributes:
+      label: Research Done
+      description: Please confirm you've done some research first
+      options:
+        - label: I have searched existing issues and discussions
+          required: true
+        - label: I have checked the documentation
+          required: true
+        - label: I have tried to find the answer in code examples
+          required: true
+
+  - type: dropdown
+    id: question-type
+    attributes:
+      label: Question Type
+      description: What type of question is this?
+      options:
+        - How to use a specific feature
+        - Best practices
+        - Performance optimization
+        - Architecture guidance
+        - Integration help
+        - Configuration questions
+        - Troubleshooting
+        - Comparison with alternatives
+        - Migration guidance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: |
+        Ask your question clearly and specifically...
+
+        For example:
+        - How do I implement custom conflict resolution?
+        - What's the best way to handle large datasets?
+        - How can I optimize sync performance for mobile?
+        - How do I migrate from version X to Y?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: Which area does your question relate to?
+      options:
+        - Getting started
+        - Configuration
+        - Sync operations
+        - Conflict resolution
+        - Queue management
+        - Background sync
+        - Performance
+        - Error handling
+        - Network issues
+        - Database operations
+        - React Native integration
+        - Expo integration
+        - TypeScript usage
+        - Testing
+        - Deployment
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Use Case
+      description: Describe your specific situation or use case
+      placeholder: |
+        Provide context about what you're trying to achieve...
+
+        For example:
+        - I'm building a mobile app that needs to sync...
+        - My use case involves...
+        - I'm working with data that...
+        - My app needs to handle...
+
+  - type: textarea
+    id: current-approach
+    attributes:
+      label: What You've Tried
+      description: What have you already tried or considered?
+      placeholder: |
+        Describe your attempts so far...
+
+        For example:
+        - I tried using configuration X but...
+        - I looked at the Y example but it doesn't cover...
+        - I attempted to implement Z approach but...
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Relevant Code
+      description: Share any relevant code (remove sensitive information)
+      placeholder: |
+        ```typescript
+        // Your current code or what you're trying to achieve
+        const syncEngine = new SyncEngine({
+          // your configuration
+        });
+
+        // what you're trying to do
+        ```
+      render: typescript
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: What's your development environment?
+      placeholder: |
+        - sync-engine-lib version: 
+        - Platform: React Native / Expo / Node.js
+        - OS: iOS / Android / Web
+        - React Native version: 
+        - Expo SDK version: 
+        - Node.js version:
+      value: |
+        - sync-engine-lib version: 
+        - Platform: 
+        - OS: 
+        - React Native version: 
+        - Expo SDK version: 
+        - Node.js version:
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints / Requirements
+      description: Any specific constraints or requirements for your solution?
+      placeholder: |
+        Describe any constraints...
+
+        For example:
+        - Must work offline for X hours
+        - Need to handle Y concurrent users
+        - Limited to Z MB of local storage
+        - Must sync every N seconds
+        - Security requirements: ...
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgency
+      description: How urgent is getting an answer?
+      options:
+        - Low - Just curious
+        - Medium - Planning future development
+        - High - Needed for current development
+        - Critical - Blocking production deployment
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other information that might be helpful
+      placeholder: |
+        Include any additional details...
+
+        For example:
+        - Error messages you're seeing
+        - Performance benchmarks
+        - Links to related resources
+        - Screenshots or logs

@@ -1,0 +1,168 @@
+name: Documentation Issue
+description: Report an issue with documentation
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation! Please provide details about the documentation issue.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation is affected?
+      options:
+        - README.md
+        - API documentation
+        - Getting started guide
+        - Code examples
+        - TypeScript definitions
+        - Inline code comments
+        - Contributing guidelines
+        - Security documentation
+        - Demo app documentation
+        - Website/Docusaurus
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing documentation
+        - Incorrect information
+        - Outdated content
+        - Unclear explanation
+        - Broken links
+        - Code examples don't work
+        - Typos or grammar
+        - Formatting issues
+        - Missing code examples
+        - Need more details
+        - Translation needed
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Where is the documentation issue located?
+      placeholder: "e.g., README.md line 45, /docs/api/sync-engine.md, packages/sync-engine-lib/src/index.ts"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-content
+    attributes:
+      label: Current Content
+      description: What does the current documentation say? (copy/paste or quote)
+      placeholder: |
+        Copy the current text that has issues:
+
+        ```
+        Current documentation text here...
+        ```
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: What's wrong with the current documentation?
+      placeholder: |
+        Describe the specific problem...
+
+        For example:
+        - This explanation is confusing because...
+        - The code example throws an error when...
+        - This information is outdated since version...
+        - Missing information about...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-improvement
+    attributes:
+      label: Suggested Improvement
+      description: How should the documentation be improved?
+      placeholder: |
+        Suggest how to fix or improve the documentation...
+
+        For example:
+        - Add explanation about...
+        - Update the example to show...
+        - Include information about...
+        - Fix the code sample to...
+
+  - type: textarea
+    id: correct-content
+    attributes:
+      label: Suggested Content
+      description: If you know the correct content, provide it here
+      placeholder: |
+        Provide the corrected or improved content:
+
+        ```typescript
+        // Corrected code example
+        ```
+
+        Or improved text explanation...
+
+  - type: checkboxes
+    id: audience
+    attributes:
+      label: Target Audience
+      description: Who would benefit from this documentation improvement?
+      options:
+        - label: New users getting started
+        - label: Experienced developers
+        - label: Contributors to the project
+        - label: TypeScript users
+        - label: React Native developers
+        - label: Expo developers
+        - label: Backend developers
+        - label: All users
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this documentation fix?
+      options:
+        - Low - Minor improvement
+        - Medium - Affects user experience
+        - High - Causes confusion or errors
+        - Critical - Blocks users from using the library
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional context that would help understand this issue
+      placeholder: |
+        Provide any additional context...
+
+        For example:
+        - What were you trying to accomplish?
+        - How did you discover this issue?
+        - What documentation would have helped?
+        - Links to related discussions
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to help improve the documentation?
+      options:
+        - label: I'm willing to submit a PR with the fix
+        - label: I can help review documentation changes
+        - label: I can provide additional examples
+        - label: I can help with testing the documentation

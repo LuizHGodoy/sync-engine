@@ -1,0 +1,122 @@
+{
+  // YAML Schema associations for GitHub templates
+  "yaml.schemas": {
+    // GitHub Issue Template Configuration
+    "https://json.schemastore.org/github-issue-config.json": [
+      ".github/ISSUE_TEMPLATE/config.yml",
+      ".github/ISSUE_TEMPLATE/config.yaml"
+    ],
+    // GitHub Issue Template Forms
+    "https://json.schemastore.org/github-issue-forms.json": [
+      ".github/ISSUE_TEMPLATE/*.yml",
+      ".github/ISSUE_TEMPLATE/*.yaml",
+      "!.github/ISSUE_TEMPLATE/config.yml",
+      "!.github/ISSUE_TEMPLATE/config.yaml"
+    ],
+    // GitHub Workflows
+    "https://json.schemastore.org/github-workflow.json": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ],
+    // GitHub Actions
+    "https://json.schemastore.org/github-action.json": [
+      ".github/actions/*/action.yml",
+      ".github/actions/*/action.yaml"
+    ]
+  },
+  
+  // File associations for better syntax highlighting
+  "files.associations": {
+    "*.yml": "yaml",
+    "*.yaml": "yaml",
+    ".github/workflows/*.yml": "yaml",
+    ".github/workflows/*.yaml": "yaml",
+    ".github/ISSUE_TEMPLATE/*.yml": "yaml",
+    ".github/ISSUE_TEMPLATE/*.yaml": "yaml"
+  },
+  
+  // YAML settings
+  "yaml.format.enable": true,
+  "yaml.validate": true,
+  "yaml.completion": true,
+  "yaml.hover": true,
+  
+  // Editor settings for YAML files
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    }
+  },
+  
+  // TypeScript/JavaScript settings for the library
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  
+  // JSON settings
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  
+  // Markdown settings
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on"
+  },
+  
+  // Explorer settings
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json,yarn.lock,pnpm-lock.yaml",
+    "tsconfig.json": "tsconfig.*.json",
+    "README.md": "CHANGELOG.md,CONTRIBUTING.md,SECURITY.md,LICENSE*"
+  },
+  
+  // Search settings
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  
+  // Files to watch exclude
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true
+  },
+  
+  // Extensions recommendations (optional)
+  "extensions.recommendations": [
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "github.vscode-pull-request-github",
+    "github.vscode-github-actions"
+  ]
+}
