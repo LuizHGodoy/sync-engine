@@ -77,7 +77,8 @@ class RNBackgroundJobManager implements BackgroundTaskManager {
 
   async isSupported(): Promise<boolean> {
     try {
-      this.BackgroundJob = require("react-native-background-job").default; // eslint-disable-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      this.BackgroundJob = require("react-native-background-job").default;
       return true;
     } catch {
       return false;
