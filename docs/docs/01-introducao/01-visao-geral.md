@@ -3,7 +3,7 @@ id: visao-geral
 title: Visão Geral
 ---
 
-# Visão Geral da Sync Engine Lib
+## Visão Geral da Sync Engine Lib
 
 A **Sync Engine Lib** é uma biblioteca TypeScript robusta e flexível, projetada para simplificar a implementação de funcionalidades **offline-first** em aplicativos React Native e Expo. O objetivo principal é permitir que seu aplicativo continue funcionando perfeitamente, mesmo sem conexão com a internet, sincronizando os dados de forma automática e transparente quando a rede estiver disponível.
 
@@ -36,9 +36,9 @@ A abordagem offline-first inverte essa lógica: o aplicativo opera primariamente
 
 ## Como Funciona em 30 Segundos
 
-1.  **Defina suas Entidades:** Você define o "schema" dos seus dados (ex: `todos`, `posts`). A biblioteca cria as tabelas no banco de dados local (SQLite).
-2.  **Opere Localmente:** Seu app realiza operações CRUD (criar, ler, atualizar, deletar) diretamente no banco local através de uma API simples: `engine.table('todos').create(...)`.
-3.  **A Mágica Acontece:** Cada operação é adicionada a uma fila. Um worker inteligente observa essa fila e a conexão de rede. Quando online, ele envia as operações para seu servidor através de um "Adapter" que você define.
+1. **Defina suas Entidades:** Você define o "schema" dos seus dados (ex: `todos`, `posts`). A biblioteca cria as tabelas no banco de dados local (SQLite).
+2. **Opere Localmente:** Seu app realiza operações CRUD (criar, ler, atualizar, deletar) diretamente no banco local através de uma API simples: `engine.table('todos').create(...)`.
+3. **A Mágica Acontece:** Cada operação é adicionada a uma fila. Um worker inteligente observa essa fila e a conexão de rede. Quando online, ele envia as operações para seu servidor através de um "Adapter" que você define.
 
 ## Próximos Passos
 

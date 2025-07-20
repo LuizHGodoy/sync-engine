@@ -3,7 +3,7 @@ id: crud-offline
 title: Operações CRUD Offline
 ---
 
-# Operações CRUD Offline
+## Operações CRUD Offline
 
 O principal benefício da `OfflineFirstEngine` é fornecer uma API de banco de dados que funciona de forma idêntica, esteja o usuário online ou offline. Todas as operações são executadas instantaneamente no banco de dados local (SQLite), garantindo uma experiência de usuário rápida e fluida.
 
@@ -16,7 +16,7 @@ const engine = new OfflineFirstEngine(/* ... */);
 await engine.initialize();
 
 // Obtém o manipulador para a entidade 'todos'
-const todosTable = engine.table('todos');
+const todosTable = engine.table("todos");
 ```
 
 Este objeto `todosTable` contém todos os métodos que você precisa para interagir com os dados daquela entidade.
@@ -34,8 +34,8 @@ async function adicionarNovaTarefa(texto: string) {
   const novaTarefa = await todosTable.create({
     text: texto,
     completed: false,
-    priority: 'medium',
-    tags: ['pessoal']
+    priority: "medium",
+    tags: ["pessoal"],
   });
 
   console.log("Tarefa criada localmente:", novaTarefa);
@@ -64,21 +64,22 @@ Busca múltiplos registros. É altamente configurável.
 ```typescript
 // Buscar todos os todos não deletados, ordenados pelos mais recentes
 const todosRecentes = await todosTable.findAll({
-  orderBy: '_created_at',
-  order: 'DESC'
+  orderBy: "_created_at",
+  order: "DESC",
 });
 
 // Buscar todos os todos incompletos com prioridade alta, com limite de 10
 const todosUrgentes = await todosTable.findAll({
   where: {
     completed: false,
-    priority: 'high'
+    priority: "high",
   },
-  limit: 10
+  limit: 10,
 });
 ```
 
 **Opções do `findAll`:**
+
 - `where`: Um objeto para filtrar os resultados.
 - `orderBy`: O nome do campo pelo qual ordenar.
 - `order`: A direção da ordenação, `'ASC'` ou `'DESC'`.
@@ -91,7 +92,9 @@ const todosUrgentes = await todosTable.findAll({
 Busca um único registro pelo seu `id` local.
 
 ```typescript
-const tarefaEspecifica = await todosTable.findById('local_1678886400000_abcdef');
+const tarefaEspecifica = await todosTable.findById(
+  "local_1678886400000_abcdef"
+);
 
 if (tarefaEspecifica) {
   console.log("Tarefa encontrada:", tarefaEspecifica.text);
@@ -105,7 +108,7 @@ Para modificar um registro existente, use `update`. Ele recebe o `id` do registr
 ```typescript
 async function completarTarefa(id: string) {
   const tarefaAtualizada = await todosTable.update(id, {
-    completed: true
+    completed: true,
   });
 
   console.log("Status da tarefa atualizado para:", tarefaAtualizada.completed);

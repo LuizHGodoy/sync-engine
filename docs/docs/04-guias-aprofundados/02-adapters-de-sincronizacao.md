@@ -3,7 +3,7 @@ id: adapters-de-sincronizacao
 title: Adapters de Sincronização
 ---
 
-# Adapters de Sincronização
+## Adapters de Sincronização
 
 Um **Adapter** é a ponte entre a `sync-engine-lib` e o seu backend. Ele define um contrato claro sobre como as operações de Create, Update, Delete e Fetch devem ser executadas na rede. Essa arquitetura torna a biblioteca completamente agnóstica em relação à sua API.
 
@@ -79,11 +79,14 @@ const restAdapter = new RestAdapter({
 
 const engine = new OfflineFirstEngine({
   adapter: restAdapter,
-  entities: { /* ... */ },
+  entities: {
+    /* ... */
+  },
 });
 ```
 
 O `RestAdapter` faz as seguintes chamadas HTTP por padrão:
+
 - **Create**: `POST /<tabela>`
 - **Update**: `PUT /<tabela>/<id>`
 - **Delete**: `DELETE /<tabela>/<id>`
@@ -111,7 +114,7 @@ class MeuAdapterCustomizado extends SyncAdapter {
     try {
       // Lógica para chamar sua API de criação
       const response = await this.apiClient.post(`/${"$"}{table}`, data);
-      
+
       // Retorna um resultado de sucesso com os dados do servidor
       return { success: true, data: response.data as ServerEntity };
     } catch (error: any) {
@@ -135,13 +138,16 @@ class MeuAdapterCustomizado extends SyncAdapter {
     // ... lógica para a chamada de deleção ...
   }
 
-  async fetchUpdates(table: string): Promise<{ entities: ServerEntity[]; hasMore: boolean; }> {
+  async fetchUpdates(
+    table: string
+  ): Promise<{ entities: ServerEntity[]; hasMore: boolean }> {
     // ... lógica para buscar atualizações do servidor ...
   }
 }
 ```
 
 Com um adapter customizado, você tem controle total sobre:
+
 - Os endpoints e métodos HTTP.
 - O formato do corpo da requisição (`body`).
 - Como a autenticação é tratada.
