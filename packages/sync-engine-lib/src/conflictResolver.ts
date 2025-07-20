@@ -179,7 +179,7 @@ export const ConflictStrategies = {
     name: "manual",
     resolve: async (
       localItem: QueueItem,
-      serverItem: any
+      _serverItem: any
     ): Promise<QueueItem> => {
       throw new Error(
         `Conflict requires manual resolution for item ${localItem.id}`
