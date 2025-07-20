@@ -365,7 +365,6 @@ export class SyncEngine {
   }
 
   private async getCachedPendingItems(limit?: number): Promise<QueueItem[]> {
-    const cacheKey = `pending_${limit || "all"}`;
     const now = Date.now();
 
     if (
