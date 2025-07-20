@@ -11,7 +11,7 @@ export class ConflictResolver {
     try {
       return await this.strategy.resolve(localItem, serverItem);
     } catch (error) {
-      throw new Error(`Erro ao resolver conflito: ${error}`);
+      throw new Error(`Error resolving conflict: ${error}`);
     }
   }
 
@@ -182,7 +182,7 @@ export const ConflictStrategies = {
       serverItem: any
     ): Promise<QueueItem> => {
       throw new Error(
-        `Conflito requer resolução manual para item ${localItem.id}`
+        `Conflict requires manual resolution for item ${localItem.id}`
       );
     },
   }),
