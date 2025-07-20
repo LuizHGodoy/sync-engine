@@ -104,33 +104,33 @@ export const SyncEngineUtils = {
     const errors: string[] = [];
 
     if (!config.serverUrl || !config.serverUrl.trim()) {
-      errors.push("serverUrl é obrigatório");
+      errors.push("serverUrl is required");
     }
 
     if (config.batchSize <= 0) {
-      errors.push("batchSize deve ser maior que 0");
+      errors.push("batchSize must be greater than 0");
     }
 
     if (config.maxRetries < 0) {
-      errors.push("maxRetries deve ser maior ou igual a 0");
+      errors.push("maxRetries must be greater than or equal to 0");
     }
 
     if (config.initialRetryDelay < 0) {
-      errors.push("initialRetryDelay deve ser maior ou igual a 0");
+      errors.push("initialRetryDelay must be greater than or equal to 0");
     }
 
     if (config.backoffMultiplier <= 1) {
-      errors.push("backoffMultiplier deve ser maior que 1");
+      errors.push("backoffMultiplier must be greater than 1");
     }
 
     if (config.requestTimeout <= 0) {
-      errors.push("requestTimeout deve ser maior que 0");
+      errors.push("requestTimeout must be greater than 0");
     }
 
     try {
       new URL(config.serverUrl);
     } catch {
-      errors.push("serverUrl deve ser uma URL válida");
+      errors.push("serverUrl must be a valid URL");
     }
 
     return {
