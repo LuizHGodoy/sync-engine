@@ -1,6 +1,6 @@
 {
   "name": "sync-engine-lib",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Biblioteca TypeScript para sincronização bidirecional offline-first em React Native/Expo",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,6 +22,14 @@
   ],
   "author": "LuizHGodoy",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luizhgodoy/sync-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luizhgodoy/sync-engine/issues"
+  },
+  "homepage": "https://github.com/luizhgodoy/sync-engine#readme",
   "peerDependencies": {
     "@react-native-community/netinfo": "^11.0.0",
     "expo-sqlite": "^14.0.0"
@@ -45,10 +53,5 @@
   "files": [
     "dist",
     "README.md"
-  ],
-  "dependencies": {
-    "expo-background-task": "^0.2.8",
-    "expo-task-manager": "^13.1.6",
-    "react-native-background-job": "^2.3.1"
-  }
+  ]
 }
