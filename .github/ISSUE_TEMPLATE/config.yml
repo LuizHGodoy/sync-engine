@@ -1,0 +1,15 @@
+# GitHub Issue Template Configuration
+# This file configures the issue template behavior
+# Documentation: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository
+
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/your-username/sync-engine/discussions
+    about: Ask questions, share ideas, and discuss with the community
+  - name: 📚 Documentation
+    url: https://github.com/your-username/sync-engine/docs
+    about: Check the comprehensive documentation and guides
+  - name: 🔍 Search Issues
+    url: https://github.com/your-username/sync-engine/issues
+    about: Search existing issues before creating a new one

@@ -15,9 +15,9 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://luizhgodoy.github.io",
+  url: "https://sync-engine-docs.vercel.app", // Ou seu domínio personalizado
   // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
+  // For Vercel deployment
   baseUrl: "/",
 
   // GitHub pages deployment config.
@@ -67,13 +67,22 @@ const config: Config = {
     ],
   ],
 
+  themes: ["@docusaurus/theme-mermaid"],
+
+  markdown: {
+    mermaid: true,
+  },
+
   themeConfig: {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
+    mermaid: {
+      theme: { light: "neutral", dark: "dark" },
+    },
     navbar: {
-      title: "My Site",
+      title: "Sync Engine",
       logo: {
-        alt: "My Site Logo",
+        alt: "Sync Engine Logo",
         src: "img/logo.svg",
       },
       items: [

@@ -3,7 +3,7 @@ id: monitoramento-de-rede
 title: Monitoramento de Rede
 ---
 
-# Monitoramento de Rede
+## Monitoramento de Rede
 
 Saber se o dispositivo está online ou offline é fundamental para uma estratégia de sincronização eficiente. A `sync-engine-lib` inclui uma classe `NetMonitor` dedicada a essa tarefa, utilizando `@react-native-community/netinfo` por baixo dos panos.
 
@@ -38,8 +38,8 @@ A `OfflineFirstEngine` expõe esses eventos através do seu próprio sistema de 
 
 ```typescript
 engine.worker.addEventListener((event) => {
-  if (event.type === 'sync_started' && event.data?.isOnline) {
-    console.log('A conexão voltou! Iniciando sincronização...');
+  if (event.type === "sync_started" && event.data?.isOnline) {
+    console.log("A conexão voltou! Iniciando sincronização...");
     // Atualize o estado da sua UI aqui
   }
 });
@@ -53,12 +53,11 @@ Durante o desenvolvimento e testes, pode ser muito útil simular condições de 
 const netMonitor = engine.network;
 
 // Força o estado para OFFLINE, não importa qual seja a conexão real
-netMonitor.setForcedOnline(false); 
+netMonitor.setForcedOnline(false);
 // Agora, netMonitor.getConnectionStatus() retornará false
 
 // A engine não tentará sincronizar enquanto o estado estiver forçado para offline
 await engine.forceSync(); // Lançará um erro "No network connection"
-
 
 // Para voltar ao comportamento normal, passe null
 netMonitor.setForcedOnline(null);

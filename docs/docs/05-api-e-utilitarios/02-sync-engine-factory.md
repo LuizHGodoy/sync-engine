@@ -3,7 +3,7 @@ id: sync-engine-factory
 title: SyncEngineFactory
 ---
 
-# SyncEngineFactory
+## SyncEngineFactory
 
 Para simplificar a criação e configuração de uma instância da `SyncEngine`, a biblioteca fornece um `SyncEngineFactory`. Ele oferece métodos para criar uma engine com configurações pré-definidas para diferentes ambientes, como desenvolvimento e produção.
 
@@ -37,35 +37,39 @@ devEngine.start();
 ### `createForDevelopment(serverUrl, options?)`
 
 Cria uma engine com configurações otimizadas para o desenvolvimento:
--   **Debug:** Habilitado (`debug: true`).
--   **Intervalo de Sync:** Curto (15 segundos), para ver as alterações rapidamente.
--   **Estratégia de Conflito:** `timestampWins()`.
+
+- **Debug:** Habilitado (`debug: true`).
+- **Intervalo de Sync:** Curto (15 segundos), para ver as alterações rapidamente.
+- **Estratégia de Conflito:** `timestampWins()`.
 
 ### `createForProduction(serverUrl, options?)`
 
 Cria uma engine com configurações mais conservadoras e seguras para um ambiente de produção:
--   **Debug:** Desabilitado (`debug: false`).
--   **Intervalo de Sync:** Mais longo (30 segundos), para economizar bateria e rede.
--   **Tamanho do Lote:** Maior (25 itens).
--   **Estratégia de Conflito:** `timestampWins()`.
+
+- **Debug:** Desabilitado (`debug: false`).
+- **Intervalo de Sync:** Mais longo (30 segundos), para economizar bateria e rede.
+- **Tamanho do Lote:** Maior (25 itens).
+- **Estratégia de Conflito:** `timestampWins()`.
 
 ### `createConservative(serverUrl, options?)`
 
 Cria uma engine com configurações muito conservadoras:
--   **Intervalo de Sync:** Muito longo (1 minuto).
--   **Tamanho do Lote:** Pequeno (5 itens).
--   **Retries:** Mais tentativas (5).
--   **Estratégia de Conflito:** `manual()`, forçando a resolução manual de conflitos para evitar perda de dados.
--   **Ideal para:** Aplicativos onde a integridade dos dados é absolutamente crítica e o consumo de recursos deve ser mínimo.
+
+- **Intervalo de Sync:** Muito longo (1 minuto).
+- **Tamanho do Lote:** Pequeno (5 itens).
+- **Retries:** Mais tentativas (5).
+- **Estratégia de Conflito:** `manual()`, forçando a resolução manual de conflitos para evitar perda de dados.
+- **Ideal para:** Aplicativos onde a integridade dos dados é absolutamente crítica e o consumo de recursos deve ser mínimo.
 
 ### `createAggressive(serverUrl, options?)`
 
 Cria uma engine com configurações agressivas para sincronização quase em tempo real:
--   **Intervalo de Sync:** Muito curto (5 segundos).
--   **Tamanho do Lote:** Muito grande (50 itens).
--   **Retries:** Menos tentativas (2).
--   **Estratégia de Conflito:** `clientWins()`, para garantir que a última ação do usuário seja enviada rapidamente.
--   **Ideal para:** Aplicativos de colaboração em tempo real, como chats ou documentos compartilhados.
+
+- **Intervalo de Sync:** Muito curto (5 segundos).
+- **Tamanho do Lote:** Muito grande (50 itens).
+- **Retries:** Menos tentativas (2).
+- **Estratégia de Conflito:** `clientWins()`, para garantir que a última ação do usuário seja enviada rapidamente.
+- **Ideal para:** Aplicativos de colaboração em tempo real, como chats ou documentos compartilhados.
 
 ### Personalizando as Opções
 
