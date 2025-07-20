@@ -3,7 +3,7 @@ id: construindo-um-app-de-todos
 title: Guia Rápido
 ---
 
-# Guia Rápido: Construindo um App de Tarefas
+## Guia Rápido: Construindo um App de Tarefas
 
 Neste guia, vamos criar um aplicativo de lista de tarefas (To-Do) totalmente funcional e offline-first em menos de 10 minutos. Vamos usar a `OfflineFirstEngine` para gerenciar nossos dados.
 
@@ -14,7 +14,13 @@ O resultado será um app onde você pode adicionar, editar e deletar tarefas, co
 O primeiro passo é configurar e criar uma instância da `OfflineFirstEngine`. Esta será a peça central do nosso sistema. Crie um arquivo `lib/offlineEngine.ts` no seu projeto.
 
 ```typescript title="lib/offlineEngine.ts"
-import { OfflineFirstEngine, SyncAdapter, SyncResult, ServerEntity, FetchOptions } from "sync-engine-lib";
+import {
+  OfflineFirstEngine,
+  SyncAdapter,
+  SyncResult,
+  ServerEntity,
+  FetchOptions,
+} from "sync-engine-lib";
 
 // Para este exemplo, vamos criar um Adapter de teste que simula uma API REST.
 // Em um projeto real, você implementaria a lógica para chamar seu backend.
@@ -30,7 +36,10 @@ class DemoRestAdapter extends SyncAdapter {
   async create(table: string, data: any): Promise<SyncResult> {
     console.log(`[Adapter] CREATE em ${"$"}{table}:`, data);
     // Simula uma resposta de sucesso do servidor
-    return Promise.resolve({ success: true, data: { id: `server_${"$"}{Date.now()}`, ...data } });
+    return Promise.resolve({
+      success: true,
+      data: { id: `server_${"$"}{Date.now()}`, ...data },
+    });
   }
   async update(table: string, id: string, data: any): Promise<SyncResult> {
     console.log(`[Adapter] UPDATE em ${"$"}{table}/${"$"}{id}:`, data);
@@ -40,7 +49,10 @@ class DemoRestAdapter extends SyncAdapter {
     console.log(`[Adapter] DELETE em ${"$"}{table}/${"$"}{id}`);
     return Promise.resolve({ success: true });
   }
-  async fetchUpdates(table: string, options: FetchOptions): Promise<{ entities: ServerEntity[]; hasMore: boolean; }> {
+  async fetchUpdates(
+    table: string,
+    options: FetchOptions
+  ): Promise<{ entities: ServerEntity[]; hasMore: boolean }> {
     console.log(`[Adapter] FETCH para ${"$"}{table}`);
     return Promise.resolve({ entities: [], hasMore: false });
   }
@@ -113,7 +125,10 @@ export const useOfflineEngine = () => {
 };
 
 // Hook para interagir com a tabela de 'todos'
-export const useTodos = (engine: OfflineFirstEngine | null, isInitialized: boolean) => {
+export const useTodos = (
+  engine: OfflineFirstEngine | null,
+  isInitialized: boolean
+) => {
   const [todos, setTodos] = useState<any[]>([]);
 
   // Carrega os todos e ouve as mudanças
@@ -123,7 +138,10 @@ export const useTodos = (engine: OfflineFirstEngine | null, isInitialized: boole
     const todosTable = engine.table("todos");
 
     const loadTodos = async () => {
-      const allTodos = await todosTable.findAll({ orderBy: "_created_at", order: "DESC" });
+      const allTodos = await todosTable.findAll({
+        orderBy: "_created_at",
+        order: "DESC",
+      });
       setTodos(allTodos);
     };
 
@@ -140,7 +158,9 @@ export const useTodos = (engine: OfflineFirstEngine | null, isInitialized: boole
   // Funções CRUD
   const createTodo = async (text: string) => {
     if (!engine) return;
-    await engine.table("todos").create({ text, completed: false, priority: 'medium', tags: [] });
+    await engine
+      .table("todos")
+      .create({ text, completed: false, priority: "medium", tags: [] });
   };
 
   const toggleTodo = async (id: string, completed: boolean) => {
@@ -163,12 +183,23 @@ Finalmente, vamos usar nossos hooks para construir a UI do aplicativo.
 
 ```tsx title="components/TodoList.tsx"
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, FlatList, Switch, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  Switch,
+  StyleSheet,
+} from "react-native";
 import { useOfflineEngine, useTodos } from "../lib/hooks";
 
 export default function TodoList() {
   const { engine, isInitialized } = useOfflineEngine();
-  const { todos, createTodo, toggleTodo, deleteTodo } = useTodos(engine, isInitialized);
+  const { todos, createTodo, toggleTodo, deleteTodo } = useTodos(
+    engine,
+    isInitialized
+  );
   const [text, setText] = useState("");
 
   if (!isInitialized) {
@@ -176,10 +207,10 @@ export default function TodoList() {
   }
 
   const getStatusColor = (status: string) => {
-    if (status === 'synced') return 'green';
-    if (status === 'pending' || status === 'syncing') return 'orange';
-    if (status === 'failed') return 'red';
-    return 'gray';
+    if (status === "synced") return "green";
+    if (status === "pending" || status === "syncing") return "orange";
+    if (status === "failed") return "red";
+    return "gray";
   };
 
   return (
@@ -191,7 +222,13 @@ export default function TodoList() {
           onChangeText={setText}
           placeholder="Nova tarefa..."
         />
-        <Button title="Adicionar" onPress={() => { createTodo(text); setText(""); }} />
+        <Button
+          title="Adicionar"
+          onPress={() => {
+            createTodo(text);
+            setText("");
+          }}
+        />
       </View>
 
       <FlatList
@@ -203,10 +240,17 @@ export default function TodoList() {
               value={item.completed}
               onValueChange={() => toggleTodo(item.id, !item.completed)}
             />
-            <Text style={[styles.todoText, item.completed && styles.completedText]}>
+            <Text
+              style={[styles.todoText, item.completed && styles.completedText]}
+            >
               {item.text}
             </Text>
-            <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(item._status) }]} />
+            <View
+              style={[
+                styles.statusIndicator,
+                { backgroundColor: getStatusColor(item._status) },
+              ]}
+            />
             <Button title="X" color="red" onPress={() => deleteTodo(item.id)} />
           </View>
         )}
@@ -218,11 +262,23 @@ export default function TodoList() {
 // (Adicione os estilos abaixo)
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  inputContainer: { flexDirection: 'row', marginBottom: 16 },
-  input: { flex: 1, borderWidth: 1, borderColor: '#ccc', padding: 8, marginRight: 8 },
-  todoItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  inputContainer: { flexDirection: "row", marginBottom: 16 },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 8,
+    marginRight: 8,
+  },
+  todoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
   todoText: { flex: 1, fontSize: 16, marginLeft: 8 },
-  completedText: { textDecorationLine: 'line-through', color: '#aaa' },
+  completedText: { textDecorationLine: "line-through", color: "#aaa" },
   statusIndicator: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
 });
 ```

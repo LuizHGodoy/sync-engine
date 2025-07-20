@@ -3,7 +3,7 @@ id: eventos-e-hooks
 title: Eventos e UI Reativa
 ---
 
-# Eventos e UI Reativa
+## Eventos e UI Reativa
 
 Uma parte crucial de um aplicativo offline-first é garantir que a interface do usuário (UI) reflita o estado atual dos dados de forma reativa. Quando um item é criado, ele deve aparecer na tela instantaneamente. Quando seu status de sincronização muda de `pending` para `synced`, a UI deve atualizar para remover o indicador de "pendente".
 
@@ -17,26 +17,26 @@ A maneira mais comum de ouvir mudanças é registrar um "listener" em um manipul
 const engine = new OfflineFirstEngine(/* ... */);
 await engine.initialize();
 
-const todosTable = engine.table('todos');
+const todosTable = engine.table("todos");
 
 const meuListener = (itemModificado) => {
-  console.log('Algo mudou na tabela de todos!', itemModificado);
+  console.log("Algo mudou na tabela de todos!", itemModificado);
   // Aqui você atualizaria o estado da sua UI (ex: com React.useState)
 };
 
 // Ouvindo o evento 'changed', que é disparado para create, update e delete.
-todosTable.on('changed', meuListener);
+todosTable.on("changed", meuListener);
 
 // Para parar de ouvir (importante para evitar memory leaks em componentes React)
 // todosTable.off('changed', meuListener);
 ```
 
-### Tipos de Eventos de Tabela:
+### Tipos de Eventos de Tabela
 
--   **`created`**: Disparado quando um novo item é criado com `table.create()`. O dado passado para o listener é o novo item.
--   **`updated`**: Disparado quando um item é atualizado com `table.update()`. O dado é o item atualizado.
--   **`deleted`**: Disparado quando um item é deletado com `table.delete()`. O dado é um objeto `{ id, _deleted_at }`.
--   **`changed`**: Um evento genérico que é disparado para qualquer uma das três operações acima. É o mais útil para simplesmente recarregar uma lista de dados.
+- **`created`**: Disparado quando um novo item é criado com `table.create()`. O dado passado para o listener é o novo item.
+- **`updated`**: Disparado quando um item é atualizado com `table.update()`. O dado é o item atualizado.
+- **`deleted`**: Disparado quando um item é deletado com `table.delete()`. O dado é um objeto `{ id, _deleted_at }`.
+- **`changed`**: Um evento genérico que é disparado para qualquer uma das três operações acima. É o mais útil para simplesmente recarregar uma lista de dados.
 
 ### Exemplo com React (`useTodos` hook)
 
@@ -85,17 +85,22 @@ worker.addEventListener((event) => {
   console.log(`[Sync Worker Event] Tipo: ${"$"}{event.type}`);
 
   switch (event.type) {
-    case 'sync_started':
-      console.log('Worker iniciou um ciclo de sincronização.');
+    case "sync_started":
+      console.log("Worker iniciou um ciclo de sincronização.");
       break;
-    case 'operation_synced':
-      console.log(`Operação ${"$"}{event.data.operation.id} sincronizada com sucesso!`);
+    case "operation_synced":
+      console.log(
+        `Operação ${"$"}{event.data.operation.id} sincronizada com sucesso!`
+      );
       break;
-    case 'operation_failed':
-      console.error(`Operação ${"$"}{event.data.operation.id} falhou:`, event.data.error);
+    case "operation_failed":
+      console.error(
+        `Operação ${"$"}{event.data.operation.id} falhou:`,
+        event.data.error
+      );
       break;
-    case 'sync_completed':
-      console.log('Ciclo de sincronização concluído.');
+    case "sync_completed":
+      console.log("Ciclo de sincronização concluído.");
       break;
   }
 });

@@ -3,7 +3,7 @@ id: instalacao
 title: Instalação
 ---
 
-# Instalação
+## Instalação
 
 Para começar a usar a **Sync Engine Lib**, siga os passos abaixo.
 
@@ -62,7 +62,7 @@ module.exports = config;
 
 Recomendamos uma estrutura de monorepo para organizar melhor o seu projeto:
 
-```
+```bash
 sync-engine/
 ├── apps/
 │   ├── demo-app/      # Seu aplicativo React Native/Expo
@@ -72,7 +72,7 @@ sync-engine/
 └── package.json
 ```
 
-## Tudo Pronto!
+## Tudo Pronto
 
 Com a biblioteca e suas dependências instaladas, você está pronto para começar a construir sua aplicação offline-first.
 

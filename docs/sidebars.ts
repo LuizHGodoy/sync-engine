@@ -52,6 +52,28 @@ const sidebars: SidebarsConfig = {
         "api-e-utilitarios/utilitarios",
       ],
     },
+    {
+      type: "category",
+      label: "Testing e Debugging",
+      collapsed: true,
+      items: [
+        "testing-e-debugging/estrategias-de-teste",
+        "testing-e-debugging/debugging-offline-sync",
+        "testing-e-debugging/mocking-e-simulacao",
+        "testing-e-debugging/testes-de-integracao",
+      ],
+    },
+    {
+      type: "category",
+      label: "Troubleshooting",
+      collapsed: true,
+      items: [
+        "troubleshooting/problemas-comuns",
+        "troubleshooting/logs-e-diagnostico",
+        "troubleshooting/performance-issues",
+        "troubleshooting/network-connectivity",
+      ],
+    },
   ],
 };
 
